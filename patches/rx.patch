@@ -1,0 +1,109 @@
+diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
+index 76a754d671f..dfb72494be9 100644
+--- a/llvm/include/llvm/ADT/Triple.h
++++ b/llvm/include/llvm/ADT/Triple.h
+@@ -95,6 +95,7 @@ public:
+     wasm64,         // WebAssembly with 64-bit pointers
+     renderscript32, // 32-bit RenderScript
+     renderscript64, // 64-bit RenderScript
++    rxv1,           // Renesas RXv1
+     ve,             // NEC SX-Aurora Vector Engine
+     LastArchType = ve
+   };
+diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
+index 2c480c1094a..17a981f238e 100644
+--- a/llvm/lib/Support/Triple.cpp
++++ b/llvm/lib/Support/Triple.cpp
+@@ -71,6 +71,7 @@ StringRef Triple::getArchTypeName(ArchType Kind) {
+   case x86:            return "i386";
+   case x86_64:         return "x86_64";
+   case xcore:          return "xcore";
++  case rxv1:           return "rxv1";
+   }
+ 
+   llvm_unreachable("Invalid ArchType!");
+@@ -147,6 +148,8 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
+   case riscv64:     return "riscv";
+ 
+   case ve:          return "ve";
++
++  case rxv1:        return "rx";
+   }
+ }
+ 
+@@ -316,6 +319,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
+     .Case("wasm64", wasm64)
+     .Case("renderscript32", renderscript32)
+     .Case("renderscript64", renderscript64)
++    .Case("rxv1", rxv1)
+     .Case("ve", ve)
+     .Default(UnknownArch);
+ }
+@@ -446,6 +450,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
+     .Case("ve", Triple::ve)
+     .Case("wasm32", Triple::wasm32)
+     .Case("wasm64", Triple::wasm64)
++    .Case("rxv1", Triple::rxv1)
+     .Default(Triple::UnknownArch);
+ 
+   // Some architectures require special parsing logic just to compute the
+@@ -704,6 +709,7 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
+   case Triple::tce:
+   case Triple::tcele:
+   case Triple::thumbeb:
++  case Triple::rxv1:
+   case Triple::ve:
+   case Triple::xcore:
+     return Triple::ELF;
+@@ -1267,6 +1273,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
+   case llvm::Triple::wasm32:
+   case llvm::Triple::x86:
+   case llvm::Triple::xcore:
++  case llvm::Triple::rxv1:
+     return 32;
+ 
+   case llvm::Triple::aarch64:
+@@ -1350,6 +1357,7 @@ Triple Triple::get32BitArchVariant() const {
+   case Triple::wasm32:
+   case Triple::x86:
+   case Triple::xcore:
++  case Triple::rxv1:
+     // Already 32-bit.
+     break;
+ 
+@@ -1388,6 +1396,7 @@ Triple Triple::get64BitArchVariant() const {
+   case Triple::tce:
+   case Triple::tcele:
+   case Triple::xcore:
++  case Triple::rxv1:
+     T.setArch(UnknownArch);
+     break;
+ 
+@@ -1471,6 +1480,7 @@ Triple Triple::getBigEndianArchVariant() const {
+   case Triple::x86_64:
+   case Triple::xcore:
+   case Triple::ve:
++  case Triple::rxv1:
+ 
+   // ARM is intentionally unsupported here, changing the architecture would
+   // drop any arch suffixes.
+@@ -1563,6 +1573,7 @@ bool Triple::isLittleEndian() const {
+   case Triple::x86:
+   case Triple::x86_64:
+   case Triple::xcore:
++  case Triple::rxv1:
+     return true;
+   default:
+     return false;
+diff --git a/llvm/lib/Target/LLVMBuild.txt b/llvm/lib/Target/LLVMBuild.txt
+index 7403f7713a9..990765d9c4c 100644
+--- a/llvm/lib/Target/LLVMBuild.txt
++++ b/llvm/lib/Target/LLVMBuild.txt
+@@ -37,6 +37,7 @@ subdirectories =
+  X86
+  XCore
+  VE
++ RX
+ 
+ ; This is a special group whose required libraries are extended (by llvm-build)
+ ; with the best execution engine (the native JIT, if available, or the
