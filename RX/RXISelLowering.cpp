@@ -135,16 +135,25 @@ SDValue RXTargetLowering::LowerFormalArguments(
   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
     CCValAssign &VA = ArgLocs[i];
     if (VA.isRegLoc()) {
-      LLVM_DEBUG(dbgs() << "### LowerFormalArguments Reg\n");
       // 引数がレジスタ経由で渡された場合
+      LLVM_DEBUG(dbgs() << "### LowerFormalArguments Reg\n");
+
+      if (VA.getLocInfo() != CCValAssign::Full) {
+        llvm_unreachable("not supported yet");
+      }
+
+      // 使用するレジスタクラスを指定
+      const TargetRegisterClass *RC = &RX::GPRRegClass;
+      // 仮想レジスタを作成
+      Register VReg = RegInfo.createVirtualRegister(RC);
+      RegInfo.addLiveIn(VA.getLocReg(), VReg);
       EVT RegVT = VA.getLocVT();
-
-      // TODO 使用するレジスタクラスを指定
-
-      // TODO 仮想レジスタを作成
+      SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, RegVT);
+      InVals.push_back(ArgValue);
     } else {
-      LLVM_DEBUG(dbgs() << "### LowerFormalArguments Mem\n");
       // 引数がスタック経由で渡された場合
+      LLVM_DEBUG(dbgs() << "### LowerFormalArguments Mem\n");
+
       assert(VA.isMemLoc());
 
       unsigned ObjSize = VA.getLocVT().getSizeInBits() / 8;

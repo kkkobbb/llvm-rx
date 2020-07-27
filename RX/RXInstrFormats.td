@@ -35,6 +35,13 @@ class RXInst1<bits<8> opcode, dag outs, dag ins, string asmstr,
   let Inst = opcode;
 }
 
+// 2byte format
+class RXInst2<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  field bits<16> Inst;
+  let Size = 2;
+}
+
 // 3byte format
 class RXInst3<dag outs, dag ins, string asmstr, list<dag> pattern>
     : RXInst<outs, ins, asmstr, pattern> {
@@ -50,9 +57,25 @@ class RXInst6<dag outs, dag ins, string asmstr, list<dag> pattern>
 }
 
 
+// 2byte format <opcode1 size opcode2 Rx Ry>
+// size 00:B 01:W 02:L
+// Rx/Ry 0000:R0 ... 1111:R15
+class RXInst2_sz_rr<bits<2> opcode1, bits<2> size, bits<4> opcode2,
+                    dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst2<outs, ins, asmstr, pattern> {
+  bits<4> rx;
+  bits<4> ry;
+
+  let Inst{15-14} = opcode1;
+  let Inst{13-12} = size;
+  let Inst{11-8} = opcode2;
+  let Inst{7-4} = rx;
+  let Inst{3-0} = ry;
+}
+
 // 3byte format <opcode addressing size Rx Ry>
 // addressing mode 00:Ry,[Rx+] 01:Ry,[-Rx] 10:[+Rx],Ry 11:[-Rx],Ry
-// size 00:B 01:W 02:L
+// size 00:B 01:W 10:L
 // Rx/Ry 0000:R0 ... 1111:R15
 class RXInst3_ad_sz_rr<bits<12> opcode, bits<2> addressing, bits<2> size,
                        dag outs, dag ins, string asmstr, list<dag> pattern>

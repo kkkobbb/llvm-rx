@@ -56,12 +56,18 @@ def NOP : RXInst1<0b00000011, (outs), (ins), "nop", []>;
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
 def RTS : RXInst1<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
 
-// 2オペランド加算 レジスタ 32bit即値
+// 加算 2オペランド レジスタ 32bit即値
 let Constraints = "$rd = $src" in
 def ADD_RI32 : RXInst6_rri32<0b011100,
                              (outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
                              "add #$imm, $rd",
                              [(set GPR:$rd, (add i32:$src, i32:$imm))]>;
+
+// move reg reg (long)
+def MOVL_RR : RXInst2_sz_rr<0b11, 0b10, 0b1111,
+                            (outs GPR:$rd), (ins GPR:$rs),
+                            "mov.l $rs, $rd",
+                            [(set GPR:$rd, GPR:$rs)]>;
 
 // pre decrement store (long)
 // NOTE 参考 AVR STPtrPdRr命令

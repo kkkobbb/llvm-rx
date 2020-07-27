@@ -79,7 +79,10 @@ void RXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator MBBI,
                               const DebugLoc &DL, MCRegister DstReg,
                               MCRegister SrcReg, bool KillSrc) const {
-  // TODO SrcRegの値をDstRegにコピーする命令を生成する
+  // SrcRegの値をDstRegにコピーする命令を生成する
+  BuildMI(MBB, MBBI, DL, get(RX::MOVL_RR))
+      .addReg(DstReg, RegState::Define)
+      .addReg(SrcReg, getKillRegState(KillSrc));
 }
 
 void RXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
@@ -149,6 +152,8 @@ unsigned RXInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   case RX::NOP:
   case RX::RTS:
     return 1;
+  case RX::MOVL_RR:
+    return 2;
   case RX::MOVL_dRR:
   case RX::MOVL_RiR:
     return 3;
