@@ -42,13 +42,17 @@ void RXFrameLowering::emitPrologue(MachineFunction &MF,
   uint64_t StackSize = MFI.getStackSize();
 
   // Early exit if there is no need to allocate on the stack
-  if (StackSize == 0 && !MFI.adjustsStack())
+  if (StackSize == 0)
     return;
 
   // Update stack size
   MFI.setStackSize(StackSize);
 
-  // TODO スタックを1フレーム分伸ばす
+  // スタックを1フレーム分伸ばす
+  const Register frameReg = RX::R0;
+  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_RI32), frameReg)
+      .addReg(frameReg)
+      .addImm(-StackSize);
 }
 
 void RXFrameLowering::emitEpilogue(MachineFunction &MF,
@@ -61,7 +65,15 @@ void RXFrameLowering::emitEpilogue(MachineFunction &MF,
   // Get the number of bytes from FrameInfo
   uint64_t StackSize = MFI.getStackSize();
 
-  // TODO スタックを1フレーム分戻す
+  // Early exit if there is no need to restore the frame pointer.
+  if (StackSize == 0)
+    return;
+
+  // スタックを1フレーム分戻す
+  const Register frameReg = RX::R0;
+  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_RI32), frameReg)
+      .addReg(frameReg)
+      .addImm(StackSize);
 }
 
 // Eliminate ADJCALLSTACKDOWN, ADJCALLSTACKUP pseudo instructions.

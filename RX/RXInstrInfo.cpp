@@ -149,5 +149,10 @@ unsigned RXInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   case RX::NOP:
   case RX::RTS:
     return 1;
+  case RX::MOVL_dRR:
+  case RX::MOVL_RiR:
+    return 3;
+  case RX::ADD_RI32:
+    return 6;
   }
 }

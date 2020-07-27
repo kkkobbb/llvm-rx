@@ -50,11 +50,35 @@ include "RXInstrFormats.td"
 //===----------------------------------------------------------------------===//
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def NOP : RXInst1<0b00000011, (outs), (ins), "NOP", []>;
+def NOP : RXInst1<0b00000011, (outs), (ins), "nop", []>;
 
 // サブルーチンからの復帰
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
-def RTS : RXInst1<0b00000010, (outs), (ins), "RTS", [(RXRts)]>;
+def RTS : RXInst1<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
+
+// 2オペランド加算 レジスタ 32bit即値
+let Constraints = "$rd = $src" in
+def ADD_RI32 : RXInst6_rri32<0b011100,
+                             (outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
+                             "add #$imm, $rd",
+                             [(set GPR:$rd, (add i32:$src, i32:$imm))]>;
+
+// pre decrement store (long)
+// NOTE 参考 AVR STPtrPdRr命令
+let Constraints = "$ptrreg = $rd" in
+def MOVL_dRR : RXInst3_ad_sz_rr<0b111111010010, 0b01, 0b10,
+                                (outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
+                                "mov.l $rs, [-$rd]",
+                                [(set i32:$ptrreg,
+                                 (pre_store GPR:$rs, GPR:$rd, 4))]>;
+
+// post increment load (long)
+// NOTE 参考 AVR LDRdPtrPi命令
+let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
+    Constraints = "$ptrreg = $rs" in
+def MOVL_RiR : RXInst3_ad_sz_rr<0b111111010010, 0b10, 0b10,
+                                (outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
+                                "mov.l [${rs}+], $rd", []>;
 
 // TODO RX用の記述 Instruction
 
