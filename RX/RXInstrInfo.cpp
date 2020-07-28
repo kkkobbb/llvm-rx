@@ -63,7 +63,7 @@ unsigned RXInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
   switch (MI.getOpcode()) {
   default:
     return 0;
-  // ストア命令の場合break
+  // TODO ストア命令の場合break
   }
 
   if (MI.getOperand(0).isFI() && MI.getOperand(1).isImm() &&
@@ -90,7 +90,10 @@ void RXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                                       unsigned SrcReg, bool IsKill, int FI,
                                       const TargetRegisterClass *RC,
                                       const TargetRegisterInfo *TRI) const {
-  // TODO スタックスロット(FI)へ値を保存する命令を生成する
+  // TODO スタックスロット(FI)へレジスタの値を保存する命令を生成する
+
+  // displacement mov命令でSrcRegの値を保存
+  // ただし、RXのdisplacementは18bitの制限有
 }
 
 void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
@@ -98,7 +101,10 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                        unsigned DstReg, int FI,
                                        const TargetRegisterClass *RC,
                                        const TargetRegisterInfo *TRI) const {
-  // TODO スタックスロット(FI)から値を取得する命令を生成する
+  // TODO スタックスロット(FI)からレジスタの値を取得する命令を生成する
+
+  // displacement mov命令で値をDstRegに保存
+  // ただし、RXのdisplacementは18bitの制限有
 }
 
 // NOTE llvm/include/llvm/CodeGen/TargetInstrInfo.h
@@ -153,7 +159,10 @@ unsigned RXInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   case RX::RTS:
     return 1;
   case RX::MOVL_RR:
+  case RX::PUSHL_R:
+  case RX::POP:
     return 2;
+  case RX::ADD_RRR:
   case RX::MOVL_dRR:
   case RX::MOVL_RiR:
     return 3;

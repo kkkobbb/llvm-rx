@@ -61,7 +61,13 @@ let Constraints = "$rd = $src" in
 def ADD_RI32 : RXInst6_rri32<0b011100,
                              (outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
                              "add #$imm, $rd",
-                             [(set GPR:$rd, (add i32:$src, i32:$imm))]>;
+                             [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
+
+// 加算 3オペランド レジスタ レジスタ レジスタ
+def ADD_RRR : RXInst3_rrr<0b111111110010,
+                          (outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                          "add $rd, $rs, $rs2",
+                          [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // move reg reg (long)
 def MOVL_RR : RXInst2_sz_rr<0b11, 0b10, 0b1111,
@@ -85,6 +91,20 @@ let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
 def MOVL_RiR : RXInst3_ad_sz_rr<0b111111010010, 0b10, 0b10,
                                 (outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
                                 "mov.l [${rs}+], $rd", []>;
+
+// push レジスタ
+let Defs = [R0], Uses = [R0],
+    hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+def PUSHL_R : RXInst2_sz_r<0b0111111010, 0b10,
+                           (outs), (ins GPR:$rs),
+                           "push.l $rs", []>;
+
+// pop レジスタ
+let Defs = [R0], Uses = [R0],
+    hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
+def POP : RXInst2_r<0b011111101011,
+                    (outs GPR:$rd), (ins),
+                    "pop $rd", []>;
 
 // TODO RX用の記述 Instruction
 
