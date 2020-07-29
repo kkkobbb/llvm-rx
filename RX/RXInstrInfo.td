@@ -72,6 +72,16 @@ def ADD_RI32 : RXInst6_rri32<0b011100,
                              "add #$imm, $rd",
                              [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
 
+// 加算 2オペランド レジスタ レジスタ
+let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
+    Constraints = "$rd = $src" in
+def ADD_RR : RXInst2_rr<0b010010,
+                        (outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                        "add $rs, $rd",
+                        []>;
+                        //[(set GPR:$rd, (add GPR:$src, GPR:$rs))]>;
+                        // 3オペランド加算より優先されるので無効
+
 // 加算 3オペランド レジスタ レジスタ レジスタ
 def ADD_RRR : RXInst3_rrr<0b111111110010,
                           (outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),

@@ -174,6 +174,7 @@ unsigned RXInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   case RX::NOP:
   case RX::RTS:
     return 1;
+  case RX::ADD_RR:
   case RX::MOVL_RR:
   case RX::PUSHL_R:
   case RX::POP:
@@ -182,6 +183,9 @@ unsigned RXInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   case RX::MOVL_dRR:
   case RX::MOVL_RiR:
     return 3;
+  case RX::MOVL_RD16:
+  case RX::MOVL_D16R:
+    return 4;
   case RX::ADD_RI32:
     return 6;
   }

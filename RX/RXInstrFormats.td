@@ -85,8 +85,22 @@ class RXInst8<dag outs, dag ins, string asmstr, list<dag> pattern>
 }
 
 
+// 2byte format <opcode ld Rx Ry>
+// Rx/Ry 0000:R0 ... 1111:R15
+class RXInst2_rr<bits<6> opcode,
+                 dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst2<outs, ins, asmstr, pattern> {
+  bits<4> rx;
+  bits<4> ry;
+
+  let Inst{15-10} = opcode;
+  let Inst{9-8} = 0x11;  // ld 11:Rx
+  let Inst{7-4} = rx;
+  let Inst{3-0} = ry;
+}
+
 // 2byte format <opcode1 size opcode2 Rx Ry>
-// size 00:B 01:W 02:L
+// size 00:B 01:W 10:L
 // Rx/Ry 0000:R0 ... 1111:R15
 class RXInst2_sz_rr<bits<2> opcode1, bits<2> size, bits<4> opcode2,
                     dag outs, dag ins, string asmstr, list<dag> pattern>
@@ -102,7 +116,7 @@ class RXInst2_sz_rr<bits<2> opcode1, bits<2> size, bits<4> opcode2,
 }
 
 // 2byte format <opcode size Rs>
-// size 00:B 01:W 02:L
+// size 00:B 01:W 10:L
 // Rs 0000:R0 ... 1111:R15
 class RXInst2_sz_r<bits<10> opcode, bits<2> size, dag outs, dag ins,
                    string asmstr, list<dag> pattern>
