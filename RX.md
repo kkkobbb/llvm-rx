@@ -1,7 +1,9 @@
 # RX 仕様
 
-## 命令セット等
+## 命令セット等 参考
 * <https://www.renesas.com/jp/ja/doc/products/mpumcu/doc/rx_family/001/r01us0032jj0130-rxv1sm.pdf>
+* gcc
+* binutils
 
 ## シミュレータ
 GDBのシミュレータを使用する
