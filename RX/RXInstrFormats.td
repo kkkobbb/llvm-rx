@@ -157,6 +157,44 @@ class RXInst3_rrr<bits<12> opcode, dag outs, dag ins, string asmstr,
   let Inst{3-0} = rz;
 }
 
+// 4byte format <opcode size Rs Rd>
+// size 00:B 01:W 10:L
+// Rs/Rd 0000:R0 ... 1111:R15
+class RXInst4_mov_dsp_r<bits<2> size, dag outs, dag ins, string asmstr,
+                        list<dag> pattern>
+    : RXInst4<outs, ins, asmstr, pattern> {
+  bits<4> rd;
+  bits<4> rs;
+  bits<18> dsp;
+
+  let Inst{31-30} = 0b11;
+  let Inst{29-28} = size;
+  let Inst{27-26} = 0b11;
+  let Inst{25-24} = 0b10;
+  let Inst{23-20} = rs;
+  let Inst{19-16} = rd;
+  let Inst{15-0} = dsp{17-2};
+}
+
+// 4byte format <opcode size Rd Rs>
+// size 00:B 01:W 10:L
+// Rs/Rd 0000:R0 ... 1111:R15
+class RXInst4_mov_r_dsp<bits<2> size, dag outs, dag ins, string asmstr,
+                        list<dag> pattern>
+    : RXInst4<outs, ins, asmstr, pattern> {
+  bits<4> rd;
+  bits<4> rs;
+  bits<18> dsp;
+
+  let Inst{31-30} = 0b11;
+  let Inst{29-28} = size;
+  let Inst{27-26} = 0b10;
+  let Inst{25-24} = 0b11;
+  let Inst{23-20} = rd;
+  let Inst{19-16} = rs;
+  let Inst{15-0} = dsp{17-2};
+}
+
 // 6byte format <opcode Rx Ry imm:32>
 // Rx/Ry 0000:R0 ... 1111:R15
 // imm:32 32bit immediate

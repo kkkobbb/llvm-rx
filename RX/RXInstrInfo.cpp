@@ -90,10 +90,18 @@ void RXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                                       unsigned SrcReg, bool IsKill, int FI,
                                       const TargetRegisterClass *RC,
                                       const TargetRegisterInfo *TRI) const {
-  // TODO スタックスロット(FI)へレジスタの値を保存する命令を生成する
+  // スタックへレジスタの値を保存する命令を生成する
+
+  DebugLoc DL;
+  if (I != MBB.end())
+    DL = I->getDebugLoc();
 
   // displacement mov命令でSrcRegの値を保存
   // ただし、RXのdisplacementは18bitの制限有
+  BuildMI(MBB, I, DL, get(RX::MOVL_RD16))
+      .addReg(SrcReg, getKillRegState(IsKill))
+      .addFrameIndex(FI)
+      .addImm(0);
 }
 
 void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
@@ -101,10 +109,18 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                        unsigned DstReg, int FI,
                                        const TargetRegisterClass *RC,
                                        const TargetRegisterInfo *TRI) const {
-  // TODO スタックスロット(FI)からレジスタの値を取得する命令を生成する
+  // スタックからレジスタの値を取得する命令を生成する
+
+  DebugLoc DL;
+  if (I != MBB.end())
+    DL = I->getDebugLoc();
 
   // displacement mov命令で値をDstRegに保存
   // ただし、RXのdisplacementは18bitの制限有
+  BuildMI(MBB, I, DL, get(RX::MOVL_D16R))
+      .addReg(DstReg)
+      .addFrameIndex(FI)
+      .addImm(0);
 }
 
 // NOTE llvm/include/llvm/CodeGen/TargetInstrInfo.h
