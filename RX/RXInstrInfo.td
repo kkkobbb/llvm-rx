@@ -85,7 +85,7 @@ def MOVL_RR : RXInst2_sz_rr<0b11, 0b10, 0b1111,
                             [(set GPR:$rd, GPR:$rs)]>;
 
 // pre decrement store (long)
-// NOTE 参考 AVR STPtrPdRr命令
+// NOTE pre decrement 参考 AVR STPtrPdRr命令
 let Constraints = "$ptrreg = $rd" in
 def MOVL_dRR : RXInst3_ad_sz_rr<0b111111010010, 0b01, 0b10,
                                 (outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
@@ -94,7 +94,7 @@ def MOVL_dRR : RXInst3_ad_sz_rr<0b111111010010, 0b01, 0b10,
                                  (pre_store GPR:$rs, GPR:$rd, 4))]>;
 
 // post increment load (long)
-// NOTE 参考 AVR LDRdPtrPi命令
+// NOTE post increment 参考 AVR LDRdPtrPi命令
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
     Constraints = "$ptrreg = $rs" in
 def MOVL_RiR : RXInst3_ad_sz_rr<0b111111010010, 0b10, 0b10,
@@ -115,19 +115,19 @@ def MOVL_D16R : RXInst4_mov_dsp_r<0b10,
                                   [(set GPR:$rd,
                                         (load (add GPR:$rs, imm18:$dsp)))]>;
 
+let Defs = [R0], Uses = [R0] in {
 // push レジスタ
-let Defs = [R0], Uses = [R0],
-    hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
 def PUSHL_R : RXInst2_sz_r<0b0111111010, 0b10,
                            (outs), (ins GPR:$rs),
                            "push.l $rs", []>;
 
 // pop レジスタ
-let Defs = [R0], Uses = [R0],
-    hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
+let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
 def POP : RXInst2_r<0b011111101011,
                     (outs GPR:$rd), (ins),
                     "pop $rd", []>;
+}
 
 // TODO RX用の記述 Instruction
 
