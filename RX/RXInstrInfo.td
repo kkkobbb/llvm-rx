@@ -44,6 +44,9 @@ def dsp16 : Operand<i32>;
 // 符号なし18bit整数 (dsp16用)
 def imm18 : PatLeaf<(imm), [{ return isUInt<18>(N->getSExtValue()); }]>;
 
+// 2オペランドで表現されるアドレス
+def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
+
 // TODO RX用の記述 Operand
 
 
@@ -116,14 +119,14 @@ def MOVL_RD16 : RXInst4_mov_r_dsp<0b10,
                                   (outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                                   "mov.l $rs, $dsp[$rd]",
                                   [(store GPR:$rs,
-                                          (load (add GPR:$rd, imm18:$dsp)))]>;
+                                          (load (addr GPR:$rd, imm18:$dsp)))]>;
 
 // displacement load (long)
 def MOVL_D16R : RXInst4_mov_dsp_r<0b10,
                                   (outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                                   "mov.l $dsp[$rs], $rd",
                                   [(set GPR:$rd,
-                                        (load (add GPR:$rs, imm18:$dsp)))]>;
+                                        (load (addr GPR:$rs, imm18:$dsp)))]>;
 
 let Defs = [R0], Uses = [R0] in {
 // push レジスタ

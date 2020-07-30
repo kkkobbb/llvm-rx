@@ -159,7 +159,10 @@ SDValue RXTargetLowering::LowerFormalArguments(
       unsigned ObjSize = VA.getLocVT().getSizeInBits() / 8;
       int FI = MFI.CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
 
-      // TODO スタックから引数を取得する
+      // スタックから引数を取得する
+      SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
+      InVals.push_back(DAG.getLoad(VA.getLocVT(), DL, Chain, FIN,
+                  MachinePointerInfo::getFixedStack(MF, FI)));
     }
   }
 
