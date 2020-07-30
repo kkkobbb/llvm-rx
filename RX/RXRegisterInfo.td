@@ -16,8 +16,8 @@ class RXReg<bits<4> Enc, string n> : Register<n> {
   let Namespace = "RX";
 }
 
-def R0  : RXReg<0,  "R0">,  DwarfRegNum<[0]> {
-  let AltNames = ["SP"];
+def R0  : RXReg<0,  "r0">,  DwarfRegNum<[0]> {
+  let AltNames = ["sp"];
 }
 def R1  : RXReg<1,  "r1">,  DwarfRegNum<[1]>;
 def R2  : RXReg<2,  "r2">,  DwarfRegNum<[2]>;
