@@ -314,9 +314,9 @@ SDValue RXTargetLowering::LowerCall(CallLoweringInfo &CLI,
     Ops.push_back(InFlag);
   }
 
-  // TODO 関数呼び出し命令生成
-  //Chain = DAG.getNode(RXISD::*****, DL, NodeTys, Ops);
-  //InFlag = Chain.getValue(1);
+  // 関数呼び出し命令生成
+  Chain = DAG.getNode(RXISD::BSR, DL, NodeTys, Ops);
+  InFlag = Chain.getValue(1);
 
   // Create the CALLSEQ_END node.
   Chain = DAG.getCALLSEQ_END(Chain, DAG.getIntPtrConstant(NumBytes, DL, true),
@@ -413,6 +413,8 @@ const char *RXTargetLowering::getTargetNodeName(unsigned Opcode) const {
   switch ((RXISD::NodeType)Opcode) {
   case RXISD::FIRST_NUMBER:
     break;
+  case RXISD::BSR:
+    return "RXISD::BSR";
   case RXISD::RTS:
     return "RXISD::RTS";
   }

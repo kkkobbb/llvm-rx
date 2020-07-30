@@ -24,6 +24,7 @@ namespace RXISD {
 enum NodeType : unsigned {
   FIRST_NUMBER = ISD::BUILTIN_OP_END,
 
+  BSR,
   RTS,
 };
 }

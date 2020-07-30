@@ -16,6 +16,10 @@
 
 // NOTE llvm/include/llvm/CodeGen/SDNodeProperties.td SDNP*
 
+def SDT_RXBsr : SDTypeProfile<0, 1, [SDTCisVT<0, iPTR>]>;
+def RXBsr : SDNode<"RXISD::BSR", SDT_RXBsr,
+                   [SDNPHasChain, SDNPOutGlue, SDNPOptInGlue, SDNPVariadic]>;
+
 def RXRts : SDNode<"RXISD::RTS", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
@@ -34,6 +38,9 @@ def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_CallSeqEnd,
 //===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
 //===----------------------------------------------------------------------===//
+
+// アドレス (bsr用)
+def bsrtarget : Operand<iPTR>;
 
 // displacement 16
 // dsp16の値の範囲は0-262140(18bit)だが、命令のビット表現では1/4して
@@ -64,6 +71,13 @@ include "RXInstrFormats.td"
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 def NOP : RXInst1<0b00000011, (outs), (ins), "nop", []>;
 
+// サブルーチン呼び出し
+// 呼び出し先 16bit 24bit レジスタの3つの指定方法がある
+let isCall = 1 in
+def BSR : RXInstPseudo<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
+def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSR tglobaladdr:$addr)>;
+def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSR texternalsym:$addr)>;
+
 // サブルーチンからの復帰
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
 def RTS : RXInst1<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
@@ -90,6 +104,11 @@ def ADD_RRR : RXInst3_rrr<0b111111110010,
                           (outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                           "add $rd, $rs, $rs2",
                           [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
+
+// move i32 reg
+def MOV_I32R : RXInstPseudo<(outs GPR:$rd), (ins i32imm:$imm32),
+                            "mov #$imm32, $rd",
+                            [(set GPR:$rd, imm:$imm32)]>;
 
 // move reg reg (long)
 def MOVL_RR : RXInst2_sz_rr<0b11, 0b10, 0b1111,
