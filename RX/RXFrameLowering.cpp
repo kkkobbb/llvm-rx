@@ -50,7 +50,7 @@ void RXFrameLowering::emitPrologue(MachineFunction &MF,
 
   // スタックを1フレーム分伸ばす
   const Register frameReg = RX::R0;
-  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_RI32), frameReg)
+  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_I32R), frameReg)
       .addReg(frameReg)
       .addImm(-StackSize);
 }
@@ -71,7 +71,7 @@ void RXFrameLowering::emitEpilogue(MachineFunction &MF,
 
   // スタックを1フレーム分戻す
   const Register frameReg = RX::R0;
-  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_RI32), frameReg)
+  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_I32R), frameReg)
       .addReg(frameReg)
       .addImm(StackSize);
 }

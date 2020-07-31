@@ -84,7 +84,7 @@ def RTS : RXInst<(outs), (ins), "rts", [(RXRts)]>;
 
 // 加算 2オペランド 32bit即値 レジスタ
 let Constraints = "$rd = $src" in
-def ADD_RI32 : RXInst<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
+def ADD_I32R : RXInst<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
                       "add #$imm, $rd",
                       [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
 
