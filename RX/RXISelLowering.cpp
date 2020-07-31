@@ -193,6 +193,8 @@ SDValue RXTargetLowering::LowerCall(CallLoweringInfo &CLI,
   CallingConv::ID CallConv = CLI.CallConv;
   bool isVarArg = CLI.IsVarArg;
 
+  MachineFunction &MF = DAG.getMachineFunction();
+
   // RX does not yet support tail call optimization.
   isTailCall = false;
 
@@ -278,7 +280,15 @@ SDValue RXTargetLowering::LowerCall(CallLoweringInfo &CLI,
 
       assert(VA.isMemLoc());
 
-      // TODO スタックに引数を格納する
+      // スタックに引数を格納する
+      SDValue PtrOff = DAG.getNode(
+          ISD::ADD, DL, getPointerTy(DAG.getDataLayout()),
+          DAG.getRegister(RX::R0, getPointerTy(DAG.getDataLayout())),
+          DAG.getIntPtrConstant(VA.getLocMemOffset() + 1, DL));
+
+      Chain = DAG.getStore(Chain, DL, Arg, PtrOff,
+                       MachinePointerInfo::getStack(MF, VA.getLocMemOffset()),
+                       0);
     }
   }
 

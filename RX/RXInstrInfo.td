@@ -117,6 +117,11 @@ let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
 def MOVL_RiR : RXInst<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
                        "mov.l [${rs}+], $rd", []>;
 
+// store (long)
+def MOVL_RpR : RXInst<(outs), (ins GPR:$rd, GPR:$rs),
+                      "mov.l $rs, [$rd]",
+                      [(store GPR:$rs, GPR:$rd)]>;
+
 // displacement store (long)
 def MOVL_RD16 : RXInst<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                        "mov.l $rs, $dsp[$rd]",
