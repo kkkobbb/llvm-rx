@@ -69,96 +69,72 @@ include "RXInstrFormats.td"
 //===----------------------------------------------------------------------===//
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def NOP : RXInst1<0b00000011, (outs), (ins), "nop", []>;
+def NOP : RXInst<(outs), (ins), "nop", []>;
 
 // サブルーチン呼び出し
 // 呼び出し先 16bit 24bit レジスタの3つの指定方法がある
 let isCall = 1 in
-def BSR : RXInstPseudo<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
+def BSR : RXInst<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
 def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSR tglobaladdr:$addr)>;
 def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSR texternalsym:$addr)>;
 
 // サブルーチンからの復帰
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
-def RTS : RXInst1<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
+def RTS : RXInst<(outs), (ins), "rts", [(RXRts)]>;
 
-// 加算 2オペランド レジスタ 32bit即値
+// 加算 2オペランド 32bit即値 レジスタ
 let Constraints = "$rd = $src" in
-def ADD_RI32 : RXInst6_rri32<0b011100,
-                             (outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
-                             "add #$imm, $rd",
-                             [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
-
-// 加算 2オペランド レジスタ レジスタ
-let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
-    Constraints = "$rd = $src" in
-def ADD_RR : RXInst2_rr<0b010010,
-                        (outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                        "add $rs, $rd",
-                        []>;
-                        //[(set GPR:$rd, (add GPR:$src, GPR:$rs))]>;
-                        // 3オペランド加算より優先されるので無効
+def ADD_RI32 : RXInst<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
+                      "add #$imm, $rd",
+                      [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
 
 // 加算 3オペランド レジスタ レジスタ レジスタ
-def ADD_RRR : RXInst3_rrr<0b111111110010,
-                          (outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                          "add $rd, $rs, $rs2",
-                          [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
+def ADD_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                     "add $rd, $rs, $rs2",
+                     [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // move i32 reg
-def MOV_I32R : RXInstPseudo<(outs GPR:$rd), (ins i32imm:$imm32),
-                            "mov #$imm32, $rd",
-                            [(set GPR:$rd, imm:$imm32)]>;
+def MOV_I32R : RXInst<(outs GPR:$rd), (ins i32imm:$imm32),
+                      "mov #$imm32, $rd",
+                      [(set GPR:$rd, imm:$imm32)]>;
 
 // move reg reg (long)
-def MOVL_RR : RXInst2_sz_rr<0b11, 0b10, 0b1111,
-                            (outs GPR:$rd), (ins GPR:$rs),
-                            "mov.l $rs, $rd",
-                            [(set GPR:$rd, GPR:$rs)]>;
+def MOVL_RR : RXInst<(outs GPR:$rd), (ins GPR:$rs),
+                     "mov.l $rs, $rd",
+                     [(set GPR:$rd, GPR:$rs)]>;
 
 // pre decrement store (long)
 // NOTE pre decrement 参考 AVR STPtrPdRr命令
 let Constraints = "$ptrreg = $rd" in
-def MOVL_dRR : RXInst3_ad_sz_rr<0b111111010010, 0b01, 0b10,
-                                (outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
-                                "mov.l $rs, [-$rd]",
-                                [(set i32:$ptrreg,
-                                 (pre_store GPR:$rs, GPR:$rd, 4))]>;
+def MOVL_dRR : RXInst<(outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
+                      "mov.l $rs, [-$rd]",
+                      [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
 
 // post increment load (long)
 // NOTE post increment 参考 AVR LDRdPtrPi命令
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
     Constraints = "$ptrreg = $rs" in
-def MOVL_RiR : RXInst3_ad_sz_rr<0b111111010010, 0b10, 0b10,
-                                (outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
-                                "mov.l [${rs}+], $rd", []>;
+def MOVL_RiR : RXInst<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
+                       "mov.l [${rs}+], $rd", []>;
 
 // displacement store (long)
-def MOVL_RD16 : RXInst4_mov_r_dsp<0b10,
-                                  (outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                                  "mov.l $rs, $dsp[$rd]",
-                                  [(store GPR:$rs,
-                                          (load (addr GPR:$rd, imm18:$dsp)))]>;
+def MOVL_RD16 : RXInst<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                       "mov.l $rs, $dsp[$rd]",
+                       [(store GPR:$rs, (load (addr GPR:$rd, imm18:$dsp)))]>;
 
 // displacement load (long)
-def MOVL_D16R : RXInst4_mov_dsp_r<0b10,
-                                  (outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                                  "mov.l $dsp[$rs], $rd",
-                                  [(set GPR:$rd,
-                                        (load (addr GPR:$rs, imm18:$dsp)))]>;
+def MOVL_D16R : RXInst<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
+                       "mov.l $dsp[$rs], $rd",
+                       [(set GPR:$rd, (load (addr GPR:$rs, imm18:$dsp)))]>;
 
 let Defs = [R0], Uses = [R0] in {
 // push レジスタ
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
-def PUSHL_R : RXInst2_sz_r<0b0111111010, 0b10,
-                           (outs), (ins GPR:$rs),
-                           "push.l $rs", []>;
+def PUSHL_R : RXInst<(outs), (ins GPR:$rs), "push.l $rs", []>;
 
 // pop レジスタ
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
-def POP : RXInst2_r<0b011111101011,
-                    (outs GPR:$rd), (ins),
-                    "pop $rd", []>;
+def POP : RXInst<(outs GPR:$rd), (ins), "pop $rd", []>;
 }
 
 // TODO RX用の記述 Instruction
