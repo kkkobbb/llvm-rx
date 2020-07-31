@@ -94,28 +94,14 @@ def ADD_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // move i32 reg
-def MOV_I32R : RXInst<(outs GPR:$rd), (ins i32imm:$imm32),
-                      "mov #$imm32, $rd",
-                      [(set GPR:$rd, imm:$imm32)]>;
+def MOV_I32R : RXInst<(outs GPR:$rd), (ins i32imm:$imm),
+                      "mov #$imm, $rd",
+                      [(set GPR:$rd, imm:$imm)]>;
 
 // move reg reg (long)
 def MOVL_RR : RXInst<(outs GPR:$rd), (ins GPR:$rs),
                      "mov.l $rs, $rd",
                      [(set GPR:$rd, GPR:$rs)]>;
-
-// pre decrement store (long)
-// NOTE pre decrement 参考 AVR STPtrPdRr命令
-let Constraints = "$ptrreg = $rd" in
-def MOVL_dRR : RXInst<(outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
-                      "mov.l $rs, [-$rd]",
-                      [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
-
-// post increment load (long)
-// NOTE post increment 参考 AVR LDRdPtrPi命令
-let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
-    Constraints = "$ptrreg = $rs" in
-def MOVL_RiR : RXInst<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
-                       "mov.l [${rs}+], $rd", []>;
 
 // store (long)
 def MOVL_RpR : RXInst<(outs), (ins GPR:$rd, GPR:$rs),
@@ -131,6 +117,20 @@ def MOVL_RD16 : RXInst<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
 def MOVL_D16R : RXInst<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                        "mov.l $dsp[$rs], $rd",
                        [(set GPR:$rd, (load (addr GPR:$rs, imm18:$dsp)))]>;
+
+// pre decrement store (long)
+// NOTE pre decrement 参考 AVR STPtrPdRr命令
+let Constraints = "$ptrreg = $rd" in
+def MOVL_dRR : RXInst<(outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
+                      "mov.l $rs, [-$rd]",
+                      [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
+
+// post increment load (long)
+// NOTE post increment 参考 AVR LDRdPtrPi命令
+let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
+    Constraints = "$ptrreg = $rs" in
+def MOVL_RiR : RXInst<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
+                       "mov.l [${rs}+], $rd", []>;
 
 let Defs = [R0], Uses = [R0] in {
 // push レジスタ
