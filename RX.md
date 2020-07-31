@@ -13,8 +13,9 @@ GDBのシミュレータを使用する
 * `git clone git://sourceware.org/git/binutils-gdb.git`
     * cloneしたディレクトリを`$BIN_ROOT`とする
 * `mkdir $BIN_ROOT/_build_rx && cd $BIN_ROOT/_build_rx`
-* `../configure --target=rx-elf --disable-nls`
-* `make`
+* `../configure --target=rx-elf --disable-nls --prefix=${HOME}/rx-binutils`
+    * インストール先は`~/rx-binutils`
+* `make && make install`
 
 ### 実行
 * `cd $BIN_ROOT/_build_rx`
