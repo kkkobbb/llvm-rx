@@ -1,4 +1,5 @@
-define i32 @test(i32 %a, i32 %b, i32 %c, i32 %d, i32 %e, i32 %f, i32 %g, i32 %h) {
+define i32 @arg8(i32 %a, i32 %b, i32 %c, i32 %d, i32 %e, i32 %f, i32 %g,
+                 i32 %h) {
   %ret1 = add i32 %a, %b
   %ret2 = add i32 %c, %d
   %ret3 = add i32 %e, %f
@@ -8,4 +9,3 @@ define i32 @test(i32 %a, i32 %b, i32 %c, i32 %d, i32 %e, i32 %f, i32 %g, i32 %h)
   %ret7 = add i32 %ret5, %ret6
   ret i32 %ret7
 }
-

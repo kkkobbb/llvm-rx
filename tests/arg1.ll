@@ -1,3 +1,3 @@
-define i16 @add_reg_reg(i16 %var) {
-  ret i16 %var
+define i32 @arg1(i32 %var) {
+  ret i32 %var
 }
