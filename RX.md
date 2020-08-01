@@ -5,8 +5,10 @@
 * gcc
 * binutils
 
-## シミュレータ
-GDBのシミュレータを使用する
+## asm動作確認
+binutilsを使用する
+* gas ldでelf生成
+* GDBのシミュレータで実行
 
 ### binutilsの準備
 * `sudo apt install texinfo bison flex`
@@ -18,13 +20,12 @@ GDBのシミュレータを使用する
 * `make && make install`
 
 ### 実行
-* `cd $BIN_ROOT/_build_rx`
-* `gas/as-new rx-asm.s`
-    * `a.out`が出力される
-* `ld/ld-new a.out -o a`
+* `~/rx-binutils/bin/rx-elf-as rx_asm.s -o rx_asm.o`
+    * `rx_asm.o`が出力される
+* `~/rx-binutils/bin/rx-elf-ld rx_asm.o`
     * `_start`ラベルがない場合、警告がでる
     * `0x10000000`から配置されるはず
-* `gdb/gdb a`
+* `~/rx-binutils/bin/rx-elf-gdb a.out`
     * `target sim`
         * シミュレータ起動
     * `load`
