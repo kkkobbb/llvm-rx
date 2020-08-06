@@ -90,7 +90,7 @@ def ADD_I32R : RXInst<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
 
 // 加算 3オペランド レジスタ レジスタ レジスタ
 def ADD_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "add $rd, $rs, $rs2",
+                     "add $rs, $rs2, $rd",
                      [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // move i32 reg
