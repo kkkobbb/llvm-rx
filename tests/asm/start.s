@@ -2,7 +2,9 @@
 .globl _start
 
 _start:
-	; ユーザースタックポインタの設定
+	# 割り込みスタックポインタの初期化
+	mvtc #0x00000000, isp
+	; ユーザースタックポインタの初期化
 	mvtc #0xf0000000, usp
 	; INT命令用ベクタテーブルの設定
 	mvtc #inttable, intb
@@ -18,6 +20,22 @@ _start:
 	rte
 
 usermode_code:
+	# 各レジスタの初期化
+	xor r1, r1
+	xor r2, r2
+	xor r3, r3
+	xor r4, r4
+	xor r5, r5
+	xor r6, r6
+	xor r7, r7
+	xor r8, r8
+	xor r9, r9
+	xor r10, r10
+	xor r11, r11
+	xor r12, r12
+	xor r13, r13
+	xor r14, r14
+	xor r15, r15
 	; 外部関数実行
 	bsr run
 
