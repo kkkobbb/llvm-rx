@@ -1,3 +1,3 @@
-define void @void_func() {
+define void @run() {
   ret void
 }

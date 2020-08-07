@@ -1,4 +1,4 @@
-define i32 @caller() {
+define i32 @run() {
   %ret = call i32 @callee(i32 1)
   ret i32 %ret
 }
