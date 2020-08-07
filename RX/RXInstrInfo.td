@@ -43,7 +43,7 @@ def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_CallSeqEnd,
 def bsrtarget : Operand<iPTR>;
 
 // displacement 16
-// dsp16の値の範囲は0-262140(18bit)だが、命令のビット表現では1/4して
+// dsp16の値の範囲は0-262140(18bit)だが、命令コードのビット表現では1/4して
 // 2bit落とした16bitになる
 // asmの記述では4の倍数のみ受け付ける
 def dsp16 : Operand<i32>;
@@ -82,33 +82,33 @@ def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSR texternalsym:$addr)>;
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
 def RTS : RXInst<(outs), (ins), "rts", [(RXRts)]>;
 
-// 加算 2オペランド 32bit即値 レジスタ
+// 加算 i32 reg
 let Constraints = "$rd = $src" in
 def ADD_I32R : RXInst<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
                       "add #$imm, $rd",
                       [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
 
-// 加算 3オペランド レジスタ レジスタ レジスタ
+// 加算 reg reg reg
 def ADD_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "add $rs, $rs2, $rd",
                      [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
-// 減算 3オペランド レジスタ レジスタ レジスタ
+// 減算 reg reg reg
 def SUB_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "sub $rs, $rs2, $rd",
                      [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
 
-// AND 3オペランド レジスタ レジスタ レジスタ
+// AND reg reg reg
 def AND_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "and $rs, $rs2, $rd",
                      [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
 
-// OR 3オペランド レジスタ レジスタ レジスタ
+// OR reg reg reg
 def OR_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                     "or $rs, $rs2, $rd",
                     [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
 
-// XOR 3オペランド レジスタ レジスタ レジスタ
+// XOR reg reg reg
 def XOR_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "xor $rs, $rs2, $rd",
                      [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
@@ -123,25 +123,25 @@ def MOVL_RR : RXInst<(outs GPR:$rd), (ins GPR:$rs),
                      "mov.l $rs, $rd",
                      [(set GPR:$rd, GPR:$rs)]>;
 
-// store (long)
-def MOVL_RpR : RXInst<(outs), (ins GPR:$rd, GPR:$rs),
-                      "mov.l $rs, [$rd]",
-                      [(store GPR:$rs, GPR:$rd)]>;
-
 // load (long)
 def MOVL_pRR : RXInst<(outs GPR:$rd), (ins GPR:$rs),
                       "mov.l [$rs], $rd",
                       [(set GPR:$rd, (load GPR:$rs))]>;
 
-// displacement store (long)
-def MOVL_RD16 : RXInst<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                       "mov.l $rs, $dsp[$rd]",
-                       [(store GPR:$rs, (load (addr GPR:$rd, imm18:$dsp)))]>;
+// store (long)
+def MOVL_RpR : RXInst<(outs), (ins GPR:$rd, GPR:$rs),
+                      "mov.l $rs, [$rd]",
+                      [(store GPR:$rs, GPR:$rd)]>;
 
 // displacement load (long)
 def MOVL_D16R : RXInst<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                        "mov.l $dsp[$rs], $rd",
                        [(set GPR:$rd, (load (addr GPR:$rs, imm18:$dsp)))]>;
+
+// displacement store (long)
+def MOVL_RD16 : RXInst<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                       "mov.l $rs, $dsp[$rd]",
+                       [(store GPR:$rs, (load (addr GPR:$rd, imm18:$dsp)))]>;
 
 // pre decrement store (long)
 // NOTE pre decrement 参考 AVR STPtrPdRr命令
@@ -158,13 +158,13 @@ def MOVL_RiR : RXInst<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
                        "mov.l [${rs}+], $rd", []>;
 
 let Defs = [R0], Uses = [R0] in {
-// push レジスタ
-let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
-def PUSHL_R : RXInst<(outs), (ins GPR:$rs), "push.l $rs", []>;
-
 // pop レジスタ
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
 def POP : RXInst<(outs GPR:$rd), (ins), "pop $rd", []>;
+
+// push レジスタ
+let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+def PUSHL_R : RXInst<(outs), (ins GPR:$rs), "push.l $rs", []>;
 }
 
 // TODO RX用の記述 Instruction
