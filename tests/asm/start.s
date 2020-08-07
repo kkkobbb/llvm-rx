@@ -1,9 +1,10 @@
 .text
 .globl _start
 
-_start:
-	# 割り込みスタックポインタの初期化
-	mvtc #0x00000000, isp
+_start:  ; 0x10000000 に割り当てられるはず
+	; 0xffffff80 以降は固定ベクタテーブル
+	; 割り込みスタックポインタの初期化
+	mvtc #0xffffff00, isp
 	; ユーザースタックポインタの初期化
 	mvtc #0xf0000000, usp
 	; INT命令用ベクタテーブルの設定
@@ -20,7 +21,7 @@ _start:
 	rte
 
 usermode_code:
-	# 各レジスタの初期化
+	; 各レジスタの初期化
 	xor r1, r1
 	xor r2, r2
 	xor r3, r3
@@ -36,14 +37,15 @@ usermode_code:
 	xor r13, r13
 	xor r14, r14
 	xor r15, r15
+
 	; 外部関数実行
 	bsr run
 
-	; ユーザーモードなのでINT命令で特権モードになり、wait実行して終了
+	; ユーザーモードなのでINT命令で特権モードにして、wait実行して終了
 	int #0
 
 int0:
-	wait  ; 終了 (特権モードが必要)
+	wait  ; 停止 (特権モードが必要)
 
 inttable:  ; 以降1024byteがベクタテーブル
 	.long int0
