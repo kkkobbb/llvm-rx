@@ -93,6 +93,26 @@ def ADD_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "add $rs, $rs2, $rd",
                      [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
+// 減算 3オペランド レジスタ レジスタ レジスタ
+def SUB_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                     "sub $rs, $rs2, $rd",
+                     [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
+
+// AND 3オペランド レジスタ レジスタ レジスタ
+def AND_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                     "and $rs, $rs2, $rd",
+                     [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
+
+// OR 3オペランド レジスタ レジスタ レジスタ
+def OR_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                    "or $rs, $rs2, $rd",
+                    [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
+
+// XOR 3オペランド レジスタ レジスタ レジスタ
+def XOR_RRR : RXInst<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                     "xor $rs, $rs2, $rd",
+                     [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
+
 // move i32 reg
 def MOV_I32R : RXInst<(outs GPR:$rd), (ins i32imm:$imm),
                       "mov #$imm, $rd",
@@ -107,6 +127,11 @@ def MOVL_RR : RXInst<(outs GPR:$rd), (ins GPR:$rs),
 def MOVL_RpR : RXInst<(outs), (ins GPR:$rd, GPR:$rs),
                       "mov.l $rs, [$rd]",
                       [(store GPR:$rs, GPR:$rd)]>;
+
+// load (long)
+def MOVL_pRR : RXInst<(outs GPR:$rd), (ins GPR:$rs),
+                      "mov.l [$rs], $rd",
+                      [(set GPR:$rd, (load GPR:$rs))]>;
 
 // displacement store (long)
 def MOVL_RD16 : RXInst<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
