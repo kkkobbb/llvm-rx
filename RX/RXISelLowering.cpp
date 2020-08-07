@@ -157,7 +157,9 @@ SDValue RXTargetLowering::LowerFormalArguments(
       assert(VA.isMemLoc());
 
       unsigned ObjSize = VA.getLocVT().getSizeInBits() / 8;
-      int FI = MFI.CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
+      // 関数呼び出し時にスタックに戻り先アドレス(4byte)をpushするため、
+      // SPOffset(第二引数)を+4している
+      int FI = MFI.CreateFixedObject(ObjSize, VA.getLocMemOffset() + 4, true);
 
       // スタックから引数を取得する
       SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
@@ -284,7 +286,7 @@ SDValue RXTargetLowering::LowerCall(CallLoweringInfo &CLI,
       SDValue PtrOff = DAG.getNode(
           ISD::ADD, DL, getPointerTy(DAG.getDataLayout()),
           DAG.getRegister(RX::R0, getPointerTy(DAG.getDataLayout())),
-          DAG.getIntPtrConstant(VA.getLocMemOffset() + 1, DL));
+          DAG.getIntPtrConstant(VA.getLocMemOffset(), DL));
 
       Chain = DAG.getStore(Chain, DL, Arg, PtrOff,
                        MachinePointerInfo::getStack(MF, VA.getLocMemOffset()),
