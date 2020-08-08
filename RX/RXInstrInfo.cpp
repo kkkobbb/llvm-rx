@@ -170,28 +170,18 @@ unsigned RXInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
 
   switch (Opcode) {
   default:
+    return get(Opcode).getSize();
+  case TargetOpcode::EH_LABEL:
+  case TargetOpcode::IMPLICIT_DEF:
+  case TargetOpcode::KILL:
+  case TargetOpcode::DBG_VALUE:
     return 0;
-  case RX::NOP:
-  case RX::RTS:
-    return 1;
-  case RX::MOVL_RR:
-  case RX::MOVL_RpR:
-  case RX::MOVL_pRR:
-  case RX::PUSHL_R:
-  case RX::POP:
-    return 2;
-  case RX::ADD_RRR:
-  case RX::SUB_RRR:
-  case RX::AND_RRR:
-  case RX::OR_RRR:
-  case RX::XOR_RRR:
-  case RX::MOVL_dRR:
-  case RX::MOVL_RiR:
-    return 3;
-  case RX::MOVL_RD16:
-  case RX::MOVL_D16R:
-    return 4;
-  case RX::ADD_I32R:
-    return 6;
+  case TargetOpcode::INLINEASM:
+  case TargetOpcode::INLINEASM_BR: {
+    const MachineFunction &MF = *MI.getParent()->getParent();
+    const auto &TM = static_cast<const RXTargetMachine &>(MF.getTarget());
+    return getInlineAsmLength(MI.getOperand(0).getSymbolName(),
+                              *TM.getMCAsmInfo());
+  }
   }
 }

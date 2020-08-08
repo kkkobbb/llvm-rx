@@ -25,3 +25,52 @@ class RXInstPseudo<dag outs, dag ins, string asmstr, list<dag> pattern>
   let isCodeGenOnly = 1;
   let isPseudo = 1;
 }
+
+// 1byte format
+class RXInst1<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 1;
+}
+
+// 2byte format
+class RXInst2<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  field bits<16> Inst = 0;
+  let Size = 2;
+}
+
+// 3byte format
+class RXInst3<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 3;
+}
+
+// 4byte format
+class RXInst4<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 4;
+}
+
+// 5byte format
+class RXInst5<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 5;
+}
+
+// 6byte format
+class RXInst6<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 6;
+}
+
+// 7byte format
+class RXInst7<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 7;
+}
+
+// 8byte format
+class RXInst8<dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst<outs, ins, asmstr, pattern> {
+  let Size = 8;
+}
