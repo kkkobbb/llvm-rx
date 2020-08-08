@@ -2,7 +2,7 @@
 # RX用の アセンブル、リンク、gdb simで実行
 
 if [ $# -ne 1 ]; then
-    echo "Error: arg (./build_run.sh <asm-file>)"
+    echo "Error: arg (./run_asm.sh <asm-file>)"
     exit 1
 fi
 
