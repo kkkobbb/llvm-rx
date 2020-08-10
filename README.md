@@ -27,6 +27,7 @@
         * `ln -s ~/llvm-rx/clang/Targets/RX.h $LLVM_ROOT/clang/lib/Basic/Targets/RX.h`
         * `ln -s ~/llvm-rx/clang/Targets/RX.cpp $LLVM_ROOT/clang/lib/Basic/Targets/RX.cpp`
 
+
 ## llvm
 llcのみ対応
 
@@ -36,7 +37,7 @@ llcのみ対応
 * `cmake --build . --target llc`
 
 ### 使い方
-* `llc tests/void_func.ll`
+* `llc llvm/tests/void_func.ll`
     * アセンブリ .sファイル が.llファイルと同じ場所に生成される
 
 
