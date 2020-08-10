@@ -1,18 +1,18 @@
 #!/bin/sh
 # RX用の アセンブル、リンク、gdb simで実行
 
+RXPREFIX="${HOME}/rx-binutils/bin/rx-elf-"
+RXAS="${RXPREFIX}as"
+RXLD="${RXPREFIX}ld"
+RXGDB="${RXPREFIX}gdb"
+
 if [ $# -ne 1 ]; then
     echo "Error: arg (./run_asm.sh <asm-file>)"
     exit 1
 fi
 
 SRC="$1"
-OBJ="${SRC}.o"
-
-RXPREFIX="${HOME}/rx-binutils/bin/rx-elf-"
-RXAS="${RXPREFIX}as"
-RXLD="${RXPREFIX}ld"
-RXGDB="${RXPREFIX}gdb"
+OBJ="$(basename ${SRC}).o"
 
 set -e
 
