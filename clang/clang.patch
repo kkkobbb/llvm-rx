@@ -1,0 +1,34 @@
+diff --git a/clang/lib/Basic/CMakeLists.txt b/clang/lib/Basic/CMakeLists.txt
+index be739c70468..36673ec3a8c 100644
+--- a/clang/lib/Basic/CMakeLists.txt
++++ b/clang/lib/Basic/CMakeLists.txt
+@@ -79,6 +79,7 @@ add_clang_library(clangBasic
+   Targets/PNaCl.cpp
+   Targets/PPC.cpp
+   Targets/RISCV.cpp
++  Targets/RX.cpp
+   Targets/SPIR.cpp
+   Targets/Sparc.cpp
+   Targets/SystemZ.cpp
+diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
+index c063f8ca447..c32c1612931 100644
+--- a/clang/lib/Basic/Targets.cpp
++++ b/clang/lib/Basic/Targets.cpp
+@@ -29,6 +29,7 @@
+ #include "Targets/PNaCl.h"
+ #include "Targets/PPC.h"
+ #include "Targets/RISCV.h"
++#include "Targets/RX.h"
+ #include "Targets/SPIR.h"
+ #include "Targets/Sparc.h"
+ #include "Targets/SystemZ.h"
+@@ -391,6 +392,9 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new RISCV64TargetInfo(Triple, Opts);
+     }
+ 
++  case llvm::Triple::rxv1:
++    return new RXv1TargetInfo(Triple, Opts);
++
+   case llvm::Triple::sparc:
+     switch (os) {
+     case llvm::Triple::Linux:
