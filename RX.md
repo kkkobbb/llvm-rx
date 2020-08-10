@@ -1,4 +1,4 @@
-# RX 仕様
+# RX 情報
 
 ## 命令セット等 参考
 * <https://www.renesas.com/jp/ja/doc/products/mpumcu/doc/rx_family/001/r01us0032jj0130-rxv1sm.pdf>
@@ -42,4 +42,4 @@ binutilsを使用する
     * `x/16bx`
         * メモリ表示 16byte 16進数表記
     * `set $r2 = 2`
-        * レジスタの変更
+        * レジスタの値の変更
