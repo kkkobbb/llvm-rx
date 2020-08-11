@@ -98,6 +98,23 @@ def SUB_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "sub $rs, $rs2, $rd",
                      [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
 
+// 乗算 reg reg reg
+def MUL_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
+                     "mul $rs, $rs2, $rd",
+                     [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
+
+// 符号付き除算 reg reg
+let Constraints = "$rd = $src" in
+def DIV_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                     "div $rs, $rd",
+                     [(set GPR:$rd, (sdiv GPR:$src, GPR:$rs))]>;
+
+// 符号なし除算 reg reg
+let Constraints = "$rd = $src" in
+def DIVU_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                     "divu $rs, $rd",
+                     [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
+
 // AND reg reg reg
 def AND_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "and $rs, $rs2, $rd",
