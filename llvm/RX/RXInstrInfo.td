@@ -143,6 +143,7 @@ def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                        "mov.l $rs, $dsp[$rd]",
                        [(store GPR:$rs, (load (addr GPR:$rd, imm18:$dsp)))]>;
 
+// NOTE 未使用
 // pre decrement store (long)
 // NOTE pre decrement 参考 AVR STPtrPdRr命令
 let Constraints = "$ptrreg = $rd" in
@@ -150,6 +151,7 @@ def MOVL_dRR : RXInst3<(outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
                       "mov.l $rs, [-$rd]",
                       [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
 
+// NOTE 未使用
 // post increment load (long)
 // NOTE post increment 参考 AVR LDRdPtrPi命令
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
@@ -158,10 +160,12 @@ def MOVL_RiR : RXInst3<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
                        "mov.l [${rs}+], $rd", []>;
 
 let Defs = [R0], Uses = [R0] in {
+// NOTE 未使用
 // pop レジスタ
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
 def POP : RXInst2<(outs GPR:$rd), (ins), "pop $rd", []>;
 
+// NOTE 未使用
 // push レジスタ
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
 def PUSHL_R : RXInst2<(outs), (ins GPR:$rs), "push.l $rs", []>;
