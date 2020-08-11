@@ -26,11 +26,6 @@ class RXInstrInfo : public RXGenInstrInfo {
 public:
   RXInstrInfo();
 
-  unsigned isLoadFromStackSlot(const MachineInstr &MI,
-                               int &FrameIndex) const override;
-  unsigned isStoreToStackSlot(const MachineInstr &MI,
-                              int &FrameIndex) const override;
-
   void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
                    const DebugLoc &DL, MCRegister DestReg, MCRegister SrcReg,
                    bool KillSrc) const override;
@@ -54,11 +49,6 @@ public:
                      MachineBasicBlock *&FBB,
                      SmallVectorImpl<MachineOperand> &Cond,
                      bool AllowModify) const override;
-
-  MachineBasicBlock *getBranchDestBlock(const MachineInstr &MI) const override;
-
-  bool isBranchOffsetInRange(unsigned BranchOpc,
-                             int64_t BrOffset) const override;
 };
 }
 #endif

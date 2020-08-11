@@ -35,46 +35,6 @@ using namespace llvm;
 RXInstrInfo::RXInstrInfo()
     : RXGenInstrInfo(RX::ADJCALLSTACKDOWN, RX::ADJCALLSTACKUP) {}
 
-unsigned RXInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
-                                          int &FrameIndex) const {
-
-  LLVM_DEBUG(dbgs() << "### isLoadFromStackSlot " << MI << "\n");
-
-  switch (MI.getOpcode()) {
-  default:
-    return 0;
-  // TODO ロード命令の場合break
-  }
-
-  if (MI.getOperand(1).isFI() && MI.getOperand(2).isImm() &&
-      MI.getOperand(2).getImm() == 0) {
-    FrameIndex = MI.getOperand(1).getIndex();
-    return MI.getOperand(0).getReg();
-  }
-
-  return 0;
-}
-
-unsigned RXInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
-                                         int &FrameIndex) const {
-
-  LLVM_DEBUG(dbgs() << "### isStoreToStackSlot " << MI << "\n");
-
-  switch (MI.getOpcode()) {
-  default:
-    return 0;
-  // TODO ストア命令の場合break
-  }
-
-  if (MI.getOperand(0).isFI() && MI.getOperand(1).isImm() &&
-      MI.getOperand(1).getImm() == 0) {
-    FrameIndex = MI.getOperand(0).getIndex();
-    return MI.getOperand(2).getReg();
-  }
-
-  return 0;
-}
-
 void RXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator MBBI,
                               const DebugLoc &DL, MCRegister DstReg,
@@ -134,24 +94,6 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
   // removeBranch insertBranch はこの関数が成功したとき(falseを返したとき?)に呼び出される
   // 未実装の場合はtrueを返す
   return true;
-}
-
-MachineBasicBlock *
-RXInstrInfo::getBranchDestBlock(const MachineInstr &MI) const {
-  LLVM_DEBUG(dbgs() << "### getBranchDestBlock " << MI << "\n");
-  // TODO brを使ったコードをコンパイルしても呼び出されない
-  assert(MI.getDesc().isBranch() && "Unexpected opcode!");
-
-  // TODO 分岐先を返す
-  return nullptr;
-}
-
-bool RXInstrInfo::isBranchOffsetInRange(unsigned BranchOp,
-                                           int64_t BrOffset) const {
-  LLVM_DEBUG(dbgs() << "### isBranchOffsetInRange " << BranchOp << "\n");
-  // TODO brを使ったコードをコンパイルしても呼び出されない
-  // TODO ジャンプ可能な範囲内なら真を返す
-  return isIntN(32, BrOffset);  // BrOffsetを符号付き32bitで表現できる場合、真
 }
 
 // Pseudo生成後の処理
