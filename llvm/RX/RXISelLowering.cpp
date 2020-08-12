@@ -55,7 +55,7 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   computeRegisterProperties(STI.getRegisterInfo());
 
   // スタックポインタの登録
-  setStackPointerRegisterToSaveRestore(RX::R15);
+  setStackPointerRegisterToSaveRestore(RX::R0);
 
   // TODO setOperationAction 修正
 
@@ -69,6 +69,13 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::SEXTLOAD, MVT::i1,  Promote);
   setOperationAction(ISD::SEXTLOAD, MVT::i8,  Promote);
   setOperationAction(ISD::SEXTLOAD, MVT::i16, Promote);
+
+  // NOTE Expand 他の命令に展開する
+  // NOTE (*rem a, b) -> (*divrem a, b) -> (sub a, (mul (div a, b), b)) に展開される
+  setOperationAction(ISD::UREM, MVT::i32, Expand);
+  setOperationAction(ISD::SREM, MVT::i32, Expand);
+  setOperationAction(ISD::UDIVREM, MVT::i32, Expand);
+  setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
 
   // NOTE llvm/include/llvm/CodeGen/TargetLowering.h setMaxAtomicSizeInBitsSupported
   // NOTE バックエンドがサポートする最大のアトミック操作のサイズ
