@@ -158,7 +158,7 @@ def MOVL_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
 // displacement store (long)
 def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                        "mov.l $rs, $dsp[$rd]",
-                       [(store GPR:$rs, (load (addr GPR:$rd, imm18:$dsp)))]>;
+                       [(store GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
 
 // NOTE 未使用
 // pre decrement store (long)
