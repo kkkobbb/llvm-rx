@@ -105,23 +105,23 @@ def RTS : RXInst1<(outs), (ins), "rts", [(RXRts)]>;
 // 加算 i32 reg
 let Constraints = "$rd = $src" in
 def ADD_I32R : RXInst6<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
-                      "add #$imm, $rd",
-                      [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
+                       "add #$imm, $rd",
+                       [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
 
 // 加算 reg reg reg
 def ADD_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "add $rs, $rs2, $rd",
-                     [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
+                      "add $rs, $rs2, $rd",
+                      [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // 減算 reg reg reg
 def SUB_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "sub $rs, $rs2, $rd",
-                     [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
+                      "sub $rs, $rs2, $rd",
+                      [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
 
 // 乗算 reg reg reg
 def MUL_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "mul $rs, $rs2, $rd",
-                     [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
+                      "mul $rs, $rs2, $rd",
+                      [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
 
 // 符号付き除算 reg reg
 let Constraints = "$rd = $src" in
@@ -132,61 +132,61 @@ def DIV_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
 // 符号なし除算 reg reg
 let Constraints = "$rd = $src" in
 def DIVU_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                     "divu $rs, $rd",
-                     [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
+                      "divu $rs, $rd",
+                      [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
 
 // AND reg reg reg
 def AND_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "and $rs, $rs2, $rd",
-                     [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
+                      "and $rs, $rs2, $rd",
+                      [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
 
 // OR reg reg reg
 def OR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                    "or $rs, $rs2, $rd",
-                    [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
+                     "or $rs, $rs2, $rd",
+                     [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
 
 // XOR reg reg reg
 def XOR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "xor $rs, $rs2, $rd",
-                     [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
+                      "xor $rs, $rs2, $rd",
+                      [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
 
 // move i32 reg
 def MOV_I32R : RXInst6<(outs GPR:$rd), (ins i32imm:$imm),
-                      "mov #$imm, $rd",
-                      [(set GPR:$rd, imm:$imm)]>;
+                       "mov #$imm, $rd",
+                       [(set GPR:$rd, imm:$imm)]>;
 
 // move reg reg (long)
 def MOVL_RR : RXInst2<(outs GPR:$rd), (ins GPR:$rs),
-                     "mov.l $rs, $rd",
-                     [(set GPR:$rd, GPR:$rs)]>;
+                      "mov.l $rs, $rd",
+                      [(set GPR:$rd, GPR:$rs)]>;
 
 // load (long)
 def MOVL_pRR : RXInst2<(outs GPR:$rd), (ins GPR:$rs),
-                      "mov.l [$rs], $rd",
-                      [(set GPR:$rd, (load GPR:$rs))]>;
+                       "mov.l [$rs], $rd",
+                       [(set GPR:$rd, (load GPR:$rs))]>;
 
 // store (long)
 def MOVL_RpR : RXInst2<(outs), (ins GPR:$rd, GPR:$rs),
-                      "mov.l $rs, [$rd]",
-                      [(store GPR:$rs, GPR:$rd)]>;
+                       "mov.l $rs, [$rd]",
+                       [(store GPR:$rs, GPR:$rd)]>;
 
 // displacement load (long)
 def MOVL_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                       "mov.l $dsp[$rs], $rd",
-                       [(set GPR:$rd, (load (addr GPR:$rs, imm18:$dsp)))]>;
+                        "mov.l $dsp[$rs], $rd",
+                        [(set GPR:$rd, (load (addr GPR:$rs, imm18:$dsp)))]>;
 
 // displacement store (long)
 def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                       "mov.l $rs, $dsp[$rd]",
-                       [(store GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
+                        "mov.l $rs, $dsp[$rd]",
+                        [(store GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
 
 // NOTE 未使用
 // pre decrement store (long)
 // NOTE pre decrement 参考 AVR STPtrPdRr命令
 let Constraints = "$ptrreg = $rd" in
 def MOVL_dRR : RXInst3<(outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
-                      "mov.l $rs, [-$rd]",
-                      [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
+                       "mov.l $rs, [-$rd]",
+                       [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
 
 // NOTE 未使用
 // post increment load (long)
@@ -215,8 +215,8 @@ def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
                      [(RXCmp GPR:$rs, GPR:$rs2)]>;
 
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
-                     "cmp $imm, $rs",
-                     [(RXCmp timm:$imm, GPR:$rs)]>;
+                       "cmp $imm, $rs",
+                       [(RXCmp timm:$imm, GPR:$rs)]>;
 }
 
 // 分岐命令
