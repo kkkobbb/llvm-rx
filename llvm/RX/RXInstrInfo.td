@@ -150,6 +150,33 @@ def XOR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                       "xor $rs, $rs2, $rd",
                       [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
 
+// 算術右シフト reg reg
+let Constraints = "$rd = $src" in {
+def SHAR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                      "shar $rs, $rd",
+                      [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
+
+// 算術左シフト reg reg
+def SHLL_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                      "shll $rs, $rd",
+                      [(set GPR:$rd, (shl GPR:$src, GPR:$rs))]>;
+
+// 論理右シフト reg reg
+def SHLR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                      "shlr $rs, $rd",
+                      [(set GPR:$rd, (srl GPR:$src, GPR:$rs))]>;
+
+// 左回転 reg reg
+def ROTL_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                      "rotl $rs, $rd",
+                      [(set GPR:$rd, (rotl GPR:$src, GPR:$rs))]>;
+
+// 右回転 reg reg
+def ROTR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                      "rotr $rs, $rd",
+                      [(set GPR:$rd, (rotr GPR:$src, GPR:$rs))]>;
+}
+
 // move i32 reg
 def MOV_I32R : RXInst6<(outs GPR:$rd), (ins i32imm:$imm),
                        "mov #$imm, $rd",
