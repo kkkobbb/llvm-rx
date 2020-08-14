@@ -20,6 +20,11 @@ binutilsを使用する
     * インストール先は`~/rx-binutils`
 * `make && make install`
 
+### シミュレータ
+* 出力
+    * SCI4.TDR `0x00088263`に書き込むとasciiとして解釈してstdoutに出力される
+    * 参考 `$BIN_ROOT/sim/rx/README.txt`
+
 ### 実行
 * `~/rx-binutils/bin/rx-elf-as rx_asm.s -o rx_asm.o`
     * `rx_asm.o`が出力される
