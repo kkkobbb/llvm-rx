@@ -14,6 +14,8 @@
 // RX specific DAG Nodes.
 //===----------------------------------------------------------------------===//
 
+// NOTE SDTypeProfile<出力の数, 入力の数, [入力の制約, ...]>
+// NOTE SDNode<命令, 制約条件, プロパティ(SDNP*)>
 // NOTE llvm/include/llvm/CodeGen/SDNodeProperties.td SDNP*
 
 def SDT_RXBsr : SDTypeProfile<0, 1, [SDTCisVT<0, iPTR>]>;
@@ -22,6 +24,21 @@ def RXBsr : SDNode<"RXISD::BSR", SDT_RXBsr,
 
 def RXRts : SDNode<"RXISD::RTS", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+def SDT_RXCmp : SDTypeProfile<0, 2, [SDTCisSameAs<0, 1>]>;
+def RXCmp : SDNode<"RXISD::CMP", SDT_RXCmp, [SDNPOutGlue]>;
+
+def SDT_RXBr : SDTypeProfile<0, 1, [SDTCisVT<0, OtherVT>]>;
+def RXBeq  : SDNode<"RXISD::BEQ",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBne  : SDNode<"RXISD::BNE",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBge  : SDNode<"RXISD::BGE",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBle  : SDNode<"RXISD::BLE",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBgt  : SDNode<"RXISD::BGT",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBlt  : SDNode<"RXISD::BLT",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBgeu : SDNode<"RXISD::BGEU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBleu : SDNode<"RXISD::BLEU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBgtu : SDNode<"RXISD::BGTU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
+def RXBltu : SDNode<"RXISD::BLTU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
 
 // TODO RX用の記述 DAG Node
 
@@ -47,6 +64,9 @@ def bsrtarget : Operand<iPTR>;
 // 2bit落とした16bitになる
 // asmの記述では4の倍数のみ受け付ける
 def dsp16 : Operand<i32>;
+
+// アドレス (BasicBlock用)
+def brtarget : Operand<OtherVT>;
 
 // 符号なし18bit整数 (dsp16用)
 def imm18 : PatLeaf<(imm), [{ return isUInt<18>(N->getSExtValue()); }]>;
@@ -187,6 +207,42 @@ def POP : RXInst2<(outs GPR:$rd), (ins), "pop $rd", []>;
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
 def PUSHL_R : RXInst2<(outs), (ins GPR:$rs), "push.l $rs", []>;
 }
+
+// 比較命令
+let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
+def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
+                     "cmp $rs, $rs2",
+                     [(RXCmp GPR:$rs, GPR:$rs2)]>;
+
+def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
+                     "cmp $imm, $rs",
+                     [(RXCmp timm:$imm, GPR:$rs)]>;
+}
+
+// 分岐命令
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
+    isBranch = 1, isTerminator = 1 in
+class Branch_W<string asmstr, SDNode OpNode>
+    : RXInst3<(outs), (ins brtarget:$target),
+              !strconcat(asmstr, " $target"),
+              [(OpNode bb:$target)]>;
+def BEQ  : Branch_W<"beq",  RXBeq>;   // ==
+def BNE  : Branch_W<"bne",  RXBne>;   // !=
+def BGE  : Branch_W<"bge",  RXBge>;   // <= (符号付き)
+def BLE  : Branch_W<"ble",  RXBle>;   // >= (符号付き)
+def BGT  : Branch_W<"bgt",  RXBgt>;   // <  (符号付き)
+def BLT  : Branch_W<"blt",  RXBlt>;   // >  (符号付き)
+def BGEU : Branch_W<"bgeu", RXBgeu>;  // <=
+def BLEU : Branch_W<"bleu", RXBleu>;  // >=
+def BGTU : Branch_W<"bgtu", RXBgtu>;  // <
+def BLTU : Branch_W<"bltu", RXBltu>;  // >
+
+// 無条件分岐命令
+// BRA命令は24bitまでの相対アドレス
+let isBranch = 1, isTerminator = 1, isBarrier = 1 in
+def BRA : RXInst2<(outs), (ins brtarget:$target),
+                  "bra $target",
+                  [(br bb:$target)]>;
 
 // TODO RX用の記述 Instruction
 

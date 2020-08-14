@@ -77,6 +77,9 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::UDIVREM, MVT::i32, Expand);
   setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
 
+  // NOTE Custom LowerOperation()に渡す
+  setOperationAction(ISD::BR_CC, MVT::i32, Custom);
+
   // NOTE llvm/include/llvm/CodeGen/TargetLowering.h setMaxAtomicSizeInBitsSupported
   // NOTE バックエンドがサポートする最大のアトミック操作のサイズ
   // これより大きい場合、__atomic_*ライブラリに展開される
@@ -88,7 +91,64 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
 
 SDValue RXTargetLowering::LowerOperation(SDValue Op,
                                          SelectionDAG &DAG) const {
-  report_fatal_error("unimplemented operand");
+  // Custom に指定したノードに対する操作
+  switch (Op.getOpcode()) {
+  default:
+    report_fatal_error("unimplemented operand");
+  case ISD::BR_CC:
+    return lowerBB_CC(Op, DAG);
+  }
+  return SDValue();
+}
+
+SDValue RXTargetLowering::lowerBB_CC(SDValue Op, SelectionDAG &DAG) const {
+  SDValue Chain = Op.getOperand(0);
+  ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(1))->get();
+  SDValue LHS   = Op.getOperand(2);
+  SDValue RHS   = Op.getOperand(3);
+  SDValue Dest  = Op.getOperand(4);
+  SDLoc dl  (Op);
+
+  RXISD::NodeType brNT;
+  switch (CC) {
+  default:
+    llvm_unreachable("unimplemented condition");
+  case ISD::SETEQ:
+  case ISD::SETUEQ:
+    brNT = RXISD::BEQ;
+    break;
+  case ISD::SETNE:
+  case ISD::SETUNE:
+    brNT = RXISD::BNE;
+    break;
+  case ISD::SETLT:
+    brNT = RXISD::BLT;
+    break;
+  case ISD::SETULT:
+    brNT = RXISD::BLTU;
+    break;
+  case ISD::SETGT:
+    brNT = RXISD::BGT;
+    break;
+  case ISD::SETUGT:
+    brNT = RXISD::BGTU;
+    break;
+  case ISD::SETLE:
+    brNT = RXISD::BLE;
+    break;
+  case ISD::SETULE:
+    brNT = RXISD::BLEU;
+    break;
+  case ISD::SETGE:
+    brNT = RXISD::BGE;
+    break;
+  case ISD::SETUGE:
+    brNT = RXISD::BGEU;
+    break;
+  }
+
+  auto cmpNode = DAG.getNode(RXISD::CMP, dl, MVT::Glue, LHS, RHS);
+  return DAG.getNode(brNT, dl, Op.getValueType(), Chain, Dest, cmpNode);
 }
 
 // NOTE llvm/include/llvm/CodeGen/TargetLowering.h EmitInstrWithCustomInserter
@@ -436,6 +496,31 @@ const char *RXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     return "RXISD::BSR";
   case RXISD::RTS:
     return "RXISD::RTS";
+
+  case RXISD::CMP:
+    return "RXISD::CMP";
+
+  case RXISD::BEQ:
+    return "RXISD::BEQ";
+  case RXISD::BNE:
+    return "RXISD::BNE";
+  case RXISD::BGE:
+    return "RXISD::BGE";
+  case RXISD::BLE:
+    return "RXISD::BLE";
+  case RXISD::BGT:
+    return "RXISD::BGT";
+  case RXISD::BLT:
+    return "RXISD::BLT";
+  case RXISD::BGEU:
+    return "RXISD::BGEU";
+  case RXISD::BLEU:
+    return "RXISD::BLEU";
+  case RXISD::BGTU:
+    return "RXISD::BGTU";
+  case RXISD::BLTU:
+    return "RXISD::BLTU";
   }
+
   return nullptr;
 }
