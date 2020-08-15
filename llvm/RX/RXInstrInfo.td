@@ -91,12 +91,11 @@ include "RXInstrFormats.td"
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 def NOP : RXInst1<(outs), (ins), "nop", []>;
 
-// サブルーチン呼び出し
-// 呼び出し先 16bit 24bit レジスタの3つの指定方法がある
+// 相対サブルーチン分岐 pcdsp:24
 let isCall = 1 in
-def BSR : RXInst4<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
-def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSR tglobaladdr:$addr)>;
-def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSR texternalsym:$addr)>;
+def BSRA : RXInst4<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
+def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSRA tglobaladdr:$addr)>;
+def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 
 // サブルーチンからの復帰
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
@@ -167,8 +166,8 @@ def XOR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                       "xor $rs, $rs2, $rd",
                       [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
 
-// 算術右シフト reg reg
 let Constraints = "$rd = $src" in {
+// 算術右シフト reg reg
 def SHAR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
                       "shar $rs, $rd",
                       [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
@@ -252,7 +251,7 @@ let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
 def PUSHL_R : RXInst2<(outs), (ins GPR:$rs), "push.l $rs", []>;
 }
 
-// 比較命令
+// 比較
 let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
 def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
                      "cmp $rs, $rs2",
@@ -263,7 +262,7 @@ def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
                        [(RXCmp timm:$imm, GPR:$rs)]>;
 }
 
-// 分岐命令
+// 相対条件分岐
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
 class Branch_W<string asmstr, SDNode OpNode>
@@ -281,7 +280,7 @@ def BLEU : Branch_W<"bleu", RXBleu>;  // >=
 def BGTU : Branch_W<"bgtu", RXBgtu>;  // <
 def BLTU : Branch_W<"bltu", RXBltu>;  // >
 
-// 無条件分岐命令
+// 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス
 let isBranch = 1, isTerminator = 1, isBarrier = 1 in
 def BRA : RXInst2<(outs), (ins brtarget:$target),
