@@ -135,6 +135,23 @@ def DIVU_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
                       "divu $rs, $rd",
                       [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
 
+// 絶対値 reg reg
+def ABS_RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs),
+                     "abs $rs, $rd",
+                     [(set GPR:$rd, (abs GPR:$rs))]>;
+
+let Constraints = "$rd = $src" in {
+// 最大値選択 reg reg
+def MAX_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                     "max $rs, $rd",
+                     [(set GPR:$rd, (smax GPR:$src, GPR:$rs))]>;
+
+// 最小値選択 reg reg
+def MIN_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                     "min $rs, $rd",
+                     [(set GPR:$rd, (smin GPR:$src, GPR:$rs))]>;
+}
+
 // AND reg reg reg
 def AND_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                       "and $rs, $rs2, $rd",
