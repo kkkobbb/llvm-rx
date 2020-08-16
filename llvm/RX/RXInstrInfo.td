@@ -106,7 +106,7 @@ def RTS : RXInst1<(outs), (ins), "rts", [(RXRts)]>;
 // 加算 i32 reg reg
 def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
                         "add #$imm, $rs, $rd",
-                        [(set GPR:$rd, (add GPR:$rs, timm:$imm))]>;
+                        [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
 
 // 加算 reg reg reg
 def ADD_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
@@ -248,6 +248,11 @@ def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                         "mov.l $rs, $dsp[$rd]",
                         [(store GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
 
+// displacement store i32 (long)
+def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
+                          "mov.l #$imm, $dsp[$rd]",
+                          [(store imm:$imm, (addr GPR:$rd, imm18:$dsp))]>;
+
 // displacement load unsigned (byte)
 def MOVUB_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                         "movu.b $dsp[$rs], $rd",
@@ -294,7 +299,7 @@ def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
 
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
                        "cmp $imm, $rs",
-                       [(RXCmp timm:$imm, GPR:$rs)]>;
+                       [(RXCmp imm:$imm, GPR:$rs)]>;
 }
 
 // 相対条件分岐
