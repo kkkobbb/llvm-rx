@@ -103,11 +103,10 @@ def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
 def RTS : RXInst1<(outs), (ins), "rts", [(RXRts)]>;
 
-// 加算 i32 reg
-let Constraints = "$rd = $src" in
-def ADD_I32R : RXInst6<(outs GPR:$rd), (ins GPR:$src, i32imm:$imm),
-                       "add #$imm, $rd",
-                       [(set GPR:$rd, (add GPR:$src, timm:$imm))]>;
+// 加算 i32 reg reg
+def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
+                        "add #$imm, $rs, $rd",
+                        [(set GPR:$rd, (add GPR:$rs, timm:$imm))]>;
 
 // 加算 reg reg reg
 def ADD_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
