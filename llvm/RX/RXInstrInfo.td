@@ -248,7 +248,18 @@ def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                         "mov.l $rs, $dsp[$rd]",
                         [(store GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
 
-// displacement store i32 (long)
+// displacement store i8
+// insにi32immがあるが、asm変換時に上位ビットを切り捨てて8bitにする
+def MOVB_I8D16 : RXInst6<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
+                         "mov.b #${imm}:8, $dsp[$rd]",
+                         [(truncstorei8 imm:$imm, (addr GPR:$rd, imm18:$dsp))]>;
+
+// displacement store i16
+def MOVW_I16D16 : RXInst6<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
+                          "mov.w #${imm}:16, $dsp[$rd]",
+                          [(truncstorei16 imm:$imm, (addr GPR:$rd, imm18:$dsp))]>;
+
+// displacement store i32
 def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
                           "mov.l #$imm, $dsp[$rd]",
                           [(store imm:$imm, (addr GPR:$rd, imm18:$dsp))]>;
