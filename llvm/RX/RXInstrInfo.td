@@ -263,22 +263,6 @@ def MOVUW_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                         "movu.w $dsp[$rs], $rd",
                         [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, imm18:$dsp)))]>;
 
-// NOTE 未使用
-// pre decrement store (long)
-// NOTE pre decrement 参考 AVR STPtrPdRr命令
-let Constraints = "$ptrreg = $rd" in
-def MOVL_dRR : RXInst3<(outs GPR:$ptrreg), (ins GPR:$rd, GPR:$rs),
-                       "mov.l $rs, [-$rd]",
-                       [(set i32:$ptrreg, (pre_store GPR:$rs, GPR:$rd, 4))]>;
-
-// NOTE 未使用
-// post increment load (long)
-// NOTE post increment 参考 AVR LDRdPtrPi命令
-let hasSideEffects = 0, mayLoad = 1, mayStore = 0,
-    Constraints = "$ptrreg = $rs" in
-def MOVL_RiR : RXInst3<(outs GPR:$rd, GPR:$ptrreg), (ins GPR:$rs),
-                       "mov.l [${rs}+], $rd", []>;
-
 let Defs = [R0], Uses = [R0] in {
 // NOTE 未使用
 // pop レジスタ
