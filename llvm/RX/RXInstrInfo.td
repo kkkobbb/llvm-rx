@@ -88,6 +88,8 @@ include "RXInstrFormats.td"
 // Instructions
 //===----------------------------------------------------------------------===//
 
+// NOTE パターンに現れるsetはノードではなく出力レジスタを表現するための記述のため、Pat<>には記述する必要がない(できない?)
+
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 def NOP : RXInst1<(outs), (ins), "nop", []>;
 
@@ -213,16 +215,18 @@ def MOVL_RpR : RXInst2<(outs), (ins GPR:$rd, GPR:$rs),
                        "mov.l $rs, [$rd]",
                        [(store GPR:$rs, GPR:$rd)]>;
 
-// NOTE extload* 上位ビット拡張
+// NOTE *extload* 上位ビット拡張ロード
 // displacement load (byte)
 def MOVB_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                         "mov.b $dsp[$rs], $rd",
-                        [(set GPR:$rd, (extloadi8 (addr GPR:$rs, imm18:$dsp)))]>;
+                        [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, imm18:$dsp)))]>;
+def : Pat<(extloadi8 (addr GPR:$rs, imm18:$dsp)), (MOVB_D16R GPR:$rs, imm18:$dsp)>;
 
 // displacement load (word)
 def MOVW_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                         "mov.w $dsp[$rs], $rd",
-                        [(set GPR:$rd, (extloadi16 (addr GPR:$rs, imm18:$dsp)))]>;
+                        [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, imm18:$dsp)))]>;
+def : Pat<(extloadi16 (addr GPR:$rs, imm18:$dsp)), (MOVW_D16R GPR:$rs, imm18:$dsp)>;
 
 // displacement load (long)
 def MOVL_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
@@ -244,6 +248,16 @@ def MOVW_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
 def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                         "mov.l $rs, $dsp[$rd]",
                         [(store GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
+
+// displacement load unsigned (byte)
+def MOVUB_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
+                        "movu.b $dsp[$rs], $rd",
+                        [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, imm18:$dsp)))]>;
+
+// displacement load unsigned (word)
+def MOVUW_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
+                        "movu.w $dsp[$rs], $rd",
+                        [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, imm18:$dsp)))]>;
 
 // NOTE 未使用
 // pre decrement store (long)
