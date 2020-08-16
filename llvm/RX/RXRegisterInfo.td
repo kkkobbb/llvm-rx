@@ -35,8 +35,5 @@ def R13 : RXReg<13, "r13">, DwarfRegNum<[13]>;
 def R14 : RXReg<14, "r14">, DwarfRegNum<[14]>;
 def R15 : RXReg<15, "r15">, DwarfRegNum<[15]>;
 
-def AllRegs : RegisterClass<"RX", [i32], 32,
-  (add  (sequence "R%u", 0, 15))>;
-
 def GPR : RegisterClass<"RX", [i32], 32,
-  (add  (sequence "R%u", 1, 15))>;
+  (add  (sequence "R%u", 0, 15))>;
