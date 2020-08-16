@@ -213,10 +213,32 @@ def MOVL_RpR : RXInst2<(outs), (ins GPR:$rd, GPR:$rs),
                        "mov.l $rs, [$rd]",
                        [(store GPR:$rs, GPR:$rd)]>;
 
+// NOTE extload* 上位ビット拡張
+// displacement load (byte)
+def MOVB_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
+                        "mov.b $dsp[$rs], $rd",
+                        [(set GPR:$rd, (extloadi8 (addr GPR:$rs, imm18:$dsp)))]>;
+
+// displacement load (word)
+def MOVW_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
+                        "mov.w $dsp[$rs], $rd",
+                        [(set GPR:$rd, (extloadi16 (addr GPR:$rs, imm18:$dsp)))]>;
+
 // displacement load (long)
 def MOVL_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
                         "mov.l $dsp[$rs], $rd",
                         [(set GPR:$rd, (load (addr GPR:$rs, imm18:$dsp)))]>;
+
+// NOTE truncstore* 上位ビット切り捨てストア
+// displacement store (byte)
+def MOVB_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                        "mov.b $rs, $dsp[$rd]",
+                        [(truncstorei8 GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
+
+// displacement store (word)
+def MOVW_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                        "mov.w $rs, $dsp[$rd]",
+                        [(truncstorei16 GPR:$rs, (addr GPR:$rd, imm18:$dsp))]>;
 
 // displacement store (long)
 def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
