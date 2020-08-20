@@ -83,6 +83,23 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
       .addImm(0);
 }
 
+// 分岐命令の分析 (分岐関係の最適化ができる部分を探すため)
+// 成功した(分岐命令を認識できた)場合、falseを返す
+// 判断できない、未実装の場合、trueを返す
+//
+// 1. MBBの最後が分岐していない場合、TBB,FBBをnullにしてfalseを返す
+// 2. MBBの最後が無条件分岐の場合、TBBに分岐先ブロックをセットしてfalseを返す
+// 3. MBBの最後が条件分岐かつ(分岐しないなら)次のブロックに飛ぶ場合、
+//    TBBに分岐先ブロック、Condに条件を評価するオペランド一覧をセットして
+//    falseを返す
+// 4. MBBの最後が条件分岐かつ(分岐しないなら)無条件分岐する場合、
+//    TBBにtrueの場合の分岐先ブロック、FBBにfalseの場合の分岐先ブロック、
+//    Condに条件を評価するオペランド一覧をセットしてfalseを返す
+//
+// removeBranch insertBranchはこの関数が成功したとき
+// 呼び出される可能性があるので実装してる必要がある
+//
+// AllowModifyがtrueの場合、BasicBlockを変更しても良い
 // NOTE llvm/include/llvm/CodeGen/TargetInstrInfo.h
 bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
                                 MachineBasicBlock *&TBB,
@@ -90,10 +107,35 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
                                 SmallVectorImpl<MachineOperand> &Cond,
                                 bool AllowModify) const {
   LLVM_DEBUG(dbgs() << "### analyzeBranch " << MBB << "\n");
-  // 分岐関係で独自の処理を追加する場合はここに記述する
-  // removeBranch insertBranch はこの関数が成功したとき(falseを返したとき?)に呼び出される
-  // 未実装の場合はtrueを返す
   return true;
+}
+
+// MBBの最後の分岐を削除する
+// analyzeBranchが成功した場合のみ呼び出される
+// 削除後の命令数を返す
+// BytesRemovedがnullでない場合、変更したバイト数をセットする
+unsigned RXInstrInfo::removeBranch(MachineBasicBlock &MBB,
+                                      int *BytesRemoved) const {
+  // TODO 未実装
+  llvm_unreachable("Target didn't implement TargetInstrInfo::removeBranch!");
+}
+
+// ブロックの最後に分岐命令を追加する
+// 引数はanalyzeBranchでセットした値となる
+// analyzeBranchが成功した場合のみ呼び出される
+// 追加後の命令数を返す
+// BytesAddedがnullでない場合、変更したバイト数をセットする
+//
+// また、解析すべき元のブランチがなかったためにanalyzeBranchが適用されない場合
+// 無条件分岐を追加するためにtail mergingで呼び出される
+//
+// Inserts a branch into the end of the specific MachineBasicBlock, returning
+// the number of instructions inserted.
+unsigned RXInstrInfo::insertBranch(
+    MachineBasicBlock &MBB, MachineBasicBlock *TBB, MachineBasicBlock *FBB,
+    ArrayRef<MachineOperand> Cond, const DebugLoc &DL, int *BytesAdded) const {
+  // TODO 未実装
+  llvm_unreachable("Target didn't implement TargetInstrInfo::insertBranch!");
 }
 
 // Pseudo生成後の処理
