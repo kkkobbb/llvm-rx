@@ -138,6 +138,14 @@ unsigned RXInstrInfo::insertBranch(
   llvm_unreachable("Target didn't implement TargetInstrInfo::insertBranch!");
 }
 
+// 引数で渡された分岐条件を反転する
+// 反転した場合はfalseを返す
+// 反転できない場合はtrueを返す
+bool RXInstrInfo::reverseBranchCondition(
+    SmallVectorImpl<MachineOperand> &Cond) const {
+  return true;
+}
+
 // Pseudo生成後の処理
 bool RXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
   LLVM_DEBUG(dbgs() << "### expandPostRAPseudo " << MI << "\n");
