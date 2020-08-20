@@ -142,10 +142,54 @@ unsigned RXInstrInfo::insertBranch(
 bool RXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
   LLVM_DEBUG(dbgs() << "### expandPostRAPseudo " << MI << "\n");
 
-  // TODO Pseudo生成後の処理
+  auto &MBB = *MI.getParent();
+  unsigned Opcode = MI.getOpcode();
+  int brOp = RX::BEQ;
+  switch (Opcode) {
+  default:
+    // 何もしていない場合、偽を返す
+    return false;
+  case RX::pBRCOND_EQ:
+    brOp = RX::BEQ;
+    break;
+  case RX::pBRCOND_NE:
+    brOp = RX::BNE;
+    break;
+  case RX::pBRCOND_LT:
+    brOp = RX::BLT;
+    break;
+  case RX::pBRCOND_ULT:
+    brOp = RX::BLTU;
+    break;
+  case RX::pBRCOND_GT:
+    brOp = RX::BGT;
+    break;
+  case RX::pBRCOND_UGT:
+    brOp = RX::BGTU;
+    break;
+  case RX::pBRCOND_LE:
+    brOp = RX::BLE;
+    break;
+  case RX::pBRCOND_ULE:
+    brOp = RX::BLEU;
+    break;
+  case RX::pBRCOND_GE:
+    brOp = RX::BGE;
+    break;
+  case RX::pBRCOND_UGE:
+    brOp = RX::BGEU;
+    break;
+  }
 
-  // 何もしていない場合、偽を返す
-  return false;
+  BuildMI(MBB, MI, MI.getDebugLoc(), get(RX::CMP_RR))
+      .addReg(MI.getOperand(0).getReg())
+      .addReg(MI.getOperand(1).getReg());
+
+  BuildMI(MBB, MI, MI.getDebugLoc(), get(brOp))
+      .addMBB(MI.getOperand(2).getMBB());
+
+  MBB.erase(MI.getIterator());
+  return true;
 }
 
 // 命令のバイト数を返す

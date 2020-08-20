@@ -76,9 +76,10 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::SREM, MVT::i32, Expand);
   setOperationAction(ISD::UDIVREM, MVT::i32, Expand);
   setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
+  // NOTE (br_cc set*, lhs, rhs, dest) -> (brcond (set* lhs, rhs), dest)
+  setOperationAction(ISD::BR_CC, MVT::i32, Expand);
 
   // NOTE Custom LowerOperation()に渡す
-  setOperationAction(ISD::BR_CC, MVT::i32, Custom);
 
   // NOTE llvm/include/llvm/CodeGen/TargetLowering.h setMaxAtomicSizeInBitsSupported
   // NOTE バックエンドがサポートする最大のアトミック操作のサイズ
@@ -92,63 +93,7 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
 SDValue RXTargetLowering::LowerOperation(SDValue Op,
                                          SelectionDAG &DAG) const {
   // Custom に指定したノードに対する操作
-  switch (Op.getOpcode()) {
-  default:
-    report_fatal_error("unimplemented operand");
-  case ISD::BR_CC:
-    return lowerBB_CC(Op, DAG);
-  }
-  return SDValue();
-}
-
-SDValue RXTargetLowering::lowerBB_CC(SDValue Op, SelectionDAG &DAG) const {
-  SDValue Chain = Op.getOperand(0);
-  ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(1))->get();
-  SDValue LHS   = Op.getOperand(2);
-  SDValue RHS   = Op.getOperand(3);
-  SDValue Dest  = Op.getOperand(4);
-  SDLoc dl  (Op);
-
-  RXISD::NodeType brNT;
-  switch (CC) {
-  default:
-    llvm_unreachable("unimplemented condition");
-  case ISD::SETEQ:
-  case ISD::SETUEQ:
-    brNT = RXISD::BEQ;
-    break;
-  case ISD::SETNE:
-  case ISD::SETUNE:
-    brNT = RXISD::BNE;
-    break;
-  case ISD::SETLT:
-    brNT = RXISD::BLT;
-    break;
-  case ISD::SETULT:
-    brNT = RXISD::BLTU;
-    break;
-  case ISD::SETGT:
-    brNT = RXISD::BGT;
-    break;
-  case ISD::SETUGT:
-    brNT = RXISD::BGTU;
-    break;
-  case ISD::SETLE:
-    brNT = RXISD::BLE;
-    break;
-  case ISD::SETULE:
-    brNT = RXISD::BLEU;
-    break;
-  case ISD::SETGE:
-    brNT = RXISD::BGE;
-    break;
-  case ISD::SETUGE:
-    brNT = RXISD::BGEU;
-    break;
-  }
-
-  auto cmpNode = DAG.getNode(RXISD::CMP, dl, MVT::Glue, LHS, RHS);
-  return DAG.getNode(brNT, dl, Op.getValueType(), Chain, Dest, cmpNode);
+  llvm_unreachable("unimplemented custom");
 }
 
 // NOTE llvm/include/llvm/CodeGen/TargetLowering.h EmitInstrWithCustomInserter

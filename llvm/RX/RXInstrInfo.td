@@ -25,21 +25,6 @@ def RXBsr : SDNode<"RXISD::BSR", SDT_RXBsr,
 def RXRts : SDNode<"RXISD::RTS", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
-def SDT_RXCmp : SDTypeProfile<0, 2, [SDTCisSameAs<0, 1>]>;
-def RXCmp : SDNode<"RXISD::CMP", SDT_RXCmp, [SDNPOutGlue]>;
-
-def SDT_RXBr : SDTypeProfile<0, 1, [SDTCisVT<0, OtherVT>]>;
-def RXBeq  : SDNode<"RXISD::BEQ",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBne  : SDNode<"RXISD::BNE",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBge  : SDNode<"RXISD::BGE",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBle  : SDNode<"RXISD::BLE",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBgt  : SDNode<"RXISD::BGT",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBlt  : SDNode<"RXISD::BLT",  SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBgeu : SDNode<"RXISD::BGEU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBleu : SDNode<"RXISD::BLEU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBgtu : SDNode<"RXISD::BGTU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-def RXBltu : SDNode<"RXISD::BLTU", SDT_RXBr, [SDNPHasChain, SDNPInGlue]>;
-
 // TODO RX用の記述 DAG Node
 
 // Target-independent type requirements, but with target-specific formats.
@@ -100,6 +85,9 @@ def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSRA tglobaladdr:$addr)>;
 def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 
 // サブルーチンからの復帰
+// NOTE isBarrier 制御フローを(常に)停止させる命令の場合、真
+// NOTE isTerminator BasicBlockを終了させる可能性がある場合、真
+// NOTE llvm/include/llvm/MC/MCInstrDesc.h
 let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
 def RTS : RXInst1<(outs), (ins), "rts", [(RXRts)]>;
 
@@ -289,31 +277,45 @@ def PUSHL_R : RXInst2<(outs), (ins GPR:$rs), "push.l $rs", []>;
 // 比較
 let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
 def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
-                     "cmp $rs, $rs2",
-                     [(RXCmp GPR:$rs, GPR:$rs2)]>;
+                     "cmp $rs, $rs2", []>;
 
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
-                       "cmp $imm, $rs",
-                       [(RXCmp imm:$imm, GPR:$rs)]>;
+                       "cmp $imm, $rs", []>;
 }
 
 // 相対条件分岐
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class Branch_W<string asmstr>
+    : RXInst3<(outs), (ins brtarget:$target),
+              !strconcat(asmstr, " $target"), []>;
+def BEQ  : Branch_W<"beq">;   // ==
+def BNE  : Branch_W<"bne">;   // !=
+def BGE  : Branch_W<"bge">;   // <= (符号付き)
+def BLE  : Branch_W<"ble">;   // >= (符号付き)
+def BGT  : Branch_W<"bgt">;   // <  (符号付き)
+def BLT  : Branch_W<"blt">;   // >  (符号付き)
+def BGEU : Branch_W<"bgeu">;  // <=
+def BLEU : Branch_W<"bleu">;  // >=
+def BGTU : Branch_W<"bgtu">;  // <
+def BLTU : Branch_W<"bltu">;  // >
+
+// 分岐仮想命令
+// 後の処理で<比較>と<相対条件分岐>に変換される
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
-class Branch_W<string asmstr, SDNode OpNode>
-    : RXInst3<(outs), (ins brtarget:$target),
-              !strconcat(asmstr, " $target"),
-              [(OpNode bb:$target)]>;
-def BEQ  : Branch_W<"beq",  RXBeq>;   // ==
-def BNE  : Branch_W<"bne",  RXBne>;   // !=
-def BGE  : Branch_W<"bge",  RXBge>;   // <= (符号付き)
-def BLE  : Branch_W<"ble",  RXBle>;   // >= (符号付き)
-def BGT  : Branch_W<"bgt",  RXBgt>;   // <  (符号付き)
-def BLT  : Branch_W<"blt",  RXBlt>;   // >  (符号付き)
-def BGEU : Branch_W<"bgeu", RXBgeu>;  // <=
-def BLEU : Branch_W<"bleu", RXBleu>;  // >=
-def BGTU : Branch_W<"bgtu", RXBgtu>;  // <
-def BLTU : Branch_W<"bltu", RXBltu>;  // >
+class BranchPseudo<PatFrag Cond>
+    : RXInstPseudo<(outs), (ins GPR:$lhs, GPR:$rhs, brtarget:$target),
+                   "", [(brcond (Cond GPR:$lhs, GPR:$rhs), bb:$target)]>;
+def pBRCOND_EQ  : BranchPseudo<seteq>;
+def pBRCOND_NE  : BranchPseudo<setne>;
+def pBRCOND_LT  : BranchPseudo<setlt>;
+def pBRCOND_ULT : BranchPseudo<setult>;
+def pBRCOND_GT  : BranchPseudo<setgt>;
+def pBRCOND_UGT : BranchPseudo<setugt>;
+def pBRCOND_LE  : BranchPseudo<setle>;
+def pBRCOND_ULE : BranchPseudo<setule>;
+def pBRCOND_GE  : BranchPseudo<setge>;
+def pBRCOND_UGE : BranchPseudo<setuge>;
 
 // 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス
