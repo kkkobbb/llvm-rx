@@ -39,6 +39,13 @@ llcのみ対応
 ### 使い方
 * `llc llvm/tests/void_func.ll`
     * アセンブリ .sファイル が.llファイルと同じ場所に生成される
+* `llc ir.ll --debug`
+    * デバッグ出力を有効にする
+* `llc ir.ll --print-after-all`
+    * 各パスでの処理後のIRを表示する
+* `llc ir.ll --march=rxv1`
+    * 出力対象のアーキテクチャを指定する
+    * 指定可能なアーキテクチャは`llc --version`で確認できる
 
 
 ## clang
