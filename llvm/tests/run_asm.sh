@@ -12,7 +12,8 @@ if [ $# -ne 1 ]; then
 fi
 
 SRC="$1"
-OBJ="$(basename ${SRC}).o"
+OBJ="$(basename $SRC).o"
+ELF="$(basename $SRC).elf"
 
 set -e
 
@@ -26,10 +27,10 @@ tmpdir=$(mktemp -d)
 # build
 $RXAS asm/start.s -o $tmpdir/start.o
 $RXAS $SRC -o $tmpdir/$OBJ
-$RXLD $tmpdir/start.o $tmpdir/$OBJ -o $tmpdir/a.out
+$RXLD $tmpdir/start.o $tmpdir/$OBJ -o $tmpdir/$ELF
 
 # simulator
-$RXGDB -q $tmpdir/a.out \
+$RXGDB -q $tmpdir/$ELF \
        -ex "set pagination off" \
        -ex "set confirm off" \
        -ex "target sim" \
