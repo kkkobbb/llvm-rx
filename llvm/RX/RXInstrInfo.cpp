@@ -83,6 +83,49 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
       .addImm(0);
 }
 
+// The contents of values added to Cond are not examined outside of
+// RXInstrInfo, giving us flexibility in what to push to it. For RX, we
+// push BranchOpcode, Reg1, Reg2.
+static void parseCondBranch(MachineInstr &LastInst, MachineBasicBlock *&Target,
+                            SmallVectorImpl<MachineOperand> &Cond) {
+  // 参考 RISCV(のまま)
+
+  // Block ends with fall-through condbranch.
+  assert(LastInst.getDesc().isConditionalBranch() &&
+         "Unknown conditional branch");
+  Target = LastInst.getOperand(2).getMBB();
+  Cond.push_back(MachineOperand::CreateImm(LastInst.getOpcode()));
+  Cond.push_back(LastInst.getOperand(0));
+  Cond.push_back(LastInst.getOperand(1));
+}
+
+static unsigned getOppositeBranchOpcode(int Opc) {
+  switch (Opc) {
+  default:
+    llvm_unreachable("Unrecognized conditional branch");
+  case RX::pBRCOND_EQ:
+    return RX::pBRCOND_NE;
+  case RX::pBRCOND_NE:
+    return RX::pBRCOND_EQ;
+  case RX::pBRCOND_LT:
+    return RX::pBRCOND_GE;
+  case RX::pBRCOND_ULT:
+    return RX::pBRCOND_UGE;
+  case RX::pBRCOND_GT:
+    return RX::pBRCOND_LE;
+  case RX::pBRCOND_UGT:
+    return RX::pBRCOND_ULE;
+  case RX::pBRCOND_LE:
+    return RX::pBRCOND_GT;
+  case RX::pBRCOND_ULE:
+    return RX::pBRCOND_UGT;
+  case RX::pBRCOND_GE:
+    return RX::pBRCOND_LT;
+  case RX::pBRCOND_UGE:
+    return RX::pBRCOND_ULT;
+  }
+}
+
 // 分岐命令の分析 (分岐関係の最適化ができる部分を探すため)
 // 成功した(分岐命令を認識できた)場合、falseを返す
 // 判断できない、未実装の場合、trueを返す
@@ -107,6 +150,68 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
                                 SmallVectorImpl<MachineOperand> &Cond,
                                 bool AllowModify) const {
   LLVM_DEBUG(dbgs() << "### analyzeBranch " << MBB << "\n");
+  // 参考 RISCV(のまま)
+
+  TBB = FBB = nullptr;
+  Cond.clear();
+
+  // If the block has no terminators, it just falls into the block after it.
+  MachineBasicBlock::iterator I = MBB.getLastNonDebugInstr();
+  if (I == MBB.end() || !isUnpredicatedTerminator(*I))
+    return false;
+
+  // Count the number of terminators and find the first unconditional or
+  // indirect branch.
+  MachineBasicBlock::iterator FirstUncondOrIndirectBr = MBB.end();
+  int NumTerminators = 0;
+  for (auto J = I.getReverse(); J != MBB.rend() && isUnpredicatedTerminator(*J);
+       J++) {
+    NumTerminators++;
+    if (J->getDesc().isUnconditionalBranch() ||
+        J->getDesc().isIndirectBranch()) {
+      FirstUncondOrIndirectBr = J.getReverse();
+    }
+  }
+
+  // If AllowModify is true, we can erase any terminators after
+  // FirstUncondOrIndirectBR.
+  if (AllowModify && FirstUncondOrIndirectBr != MBB.end()) {
+    while (std::next(FirstUncondOrIndirectBr) != MBB.end()) {
+      std::next(FirstUncondOrIndirectBr)->eraseFromParent();
+      NumTerminators--;
+    }
+    I = FirstUncondOrIndirectBr;
+  }
+
+  // We can't handle blocks that end in an indirect branch.
+  if (I->getDesc().isIndirectBranch())
+    return true;
+
+  // We can't handle blocks with more than 2 terminators.
+  if (NumTerminators > 2)
+    return true;
+
+  // Handle a single unconditional branch.
+  if (NumTerminators == 1 && I->getDesc().isUnconditionalBranch()) {
+    TBB = I->getOperand(0).getMBB();
+    return false;
+  }
+
+  // Handle a single conditional branch.
+  if (NumTerminators == 1 && I->getDesc().isConditionalBranch()) {
+    parseCondBranch(*I, TBB, Cond);
+    return false;
+  }
+
+  // Handle a conditional branch followed by an unconditional branch.
+  if (NumTerminators == 2 && std::prev(I)->getDesc().isConditionalBranch() &&
+      I->getDesc().isUnconditionalBranch()) {
+    parseCondBranch(*std::prev(I), TBB, Cond);
+    FBB = I->getOperand(0).getMBB();
+    return false;
+  }
+
+  // Otherwise, we can't handle this.
   return true;
 }
 
@@ -116,8 +221,45 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
 // BytesRemovedがnullでない場合、変更したバイト数をセットする
 unsigned RXInstrInfo::removeBranch(MachineBasicBlock &MBB,
                                       int *BytesRemoved) const {
-  // TODO 未実装
-  llvm_unreachable("Target didn't implement TargetInstrInfo::removeBranch!");
+  LLVM_DEBUG(dbgs() << "### removeBranch " << MBB << "\n");
+  // 末尾が分岐になる場合は以下の3パターン
+  // 1. 条件分岐
+  //   b*  LBL
+  // 2. 無条件分岐
+  //   bra LBL
+  // 3. 条件分岐と無条件分岐の組み合わせ
+  //   b*  LBL1
+  //   bra LBL2
+  // 参考 RISCV(のまま)
+
+  if (BytesRemoved)
+    *BytesRemoved = 0;
+  MachineBasicBlock::iterator I = MBB.getLastNonDebugInstr();
+  if (I == MBB.end())
+    return 0;
+
+  if (!I->getDesc().isUnconditionalBranch() &&
+      !I->getDesc().isConditionalBranch())
+    return 0;
+
+  // Remove the branch.
+  if (BytesRemoved)
+    *BytesRemoved += getInstSizeInBytes(*I);
+  I->eraseFromParent();
+
+  I = MBB.end();
+
+  if (I == MBB.begin())
+    return 1;
+  --I;
+  if (!I->getDesc().isConditionalBranch())
+    return 1;
+
+  // Remove the branch.
+  if (BytesRemoved)
+    *BytesRemoved += getInstSizeInBytes(*I);
+  I->eraseFromParent();
+  return 2;
 }
 
 // ブロックの最後に分岐命令を追加する
@@ -134,19 +276,67 @@ unsigned RXInstrInfo::removeBranch(MachineBasicBlock &MBB,
 unsigned RXInstrInfo::insertBranch(
     MachineBasicBlock &MBB, MachineBasicBlock *TBB, MachineBasicBlock *FBB,
     ArrayRef<MachineOperand> Cond, const DebugLoc &DL, int *BytesAdded) const {
-  // TODO 未実装
-  llvm_unreachable("Target didn't implement TargetInstrInfo::insertBranch!");
+  LLVM_DEBUG(dbgs() << "### insertBranch " << MBB << "\n");
+  // CondにはanalyzeBranch()によって
+  // 条件分岐の場合、[pBRCOND_*, lhs(reg), rhs(reg)]が格納される
+  // 無条件分岐の場合、空になる
+  // 参考 RISCV(のまま)
+
+  if (BytesAdded)
+    *BytesAdded = 0;
+
+  // Shouldn't be a fall through.
+  assert(TBB && "InsertBranch must not be told to insert a fallthrough");
+  assert((Cond.size() == 3 || Cond.size() == 0) &&
+         "RX branch conditions have two components!");
+
+  // Unconditional branch.
+  if (Cond.empty()) {
+    MachineInstr &MI = *BuildMI(&MBB, DL, get(RX::BRA)).addMBB(TBB);
+    if (BytesAdded)
+      *BytesAdded += getInstSizeInBytes(MI);
+    return 1;
+  }
+
+  // Either a one or two-way conditional branch.
+  unsigned Opc = Cond[0].getImm();
+  MachineInstr &CondMI =
+      *BuildMI(&MBB, DL, get(Opc)).add(Cond[1]).add(Cond[2]).addMBB(TBB);
+  if (BytesAdded)
+    *BytesAdded += getInstSizeInBytes(CondMI);
+
+  // One-way conditional branch.
+  if (!FBB)
+    return 1;
+
+  // Two-way conditional branch.
+  MachineInstr &MI = *BuildMI(&MBB, DL, get(RX::BRA)).addMBB(FBB);
+  if (BytesAdded)
+    *BytesAdded += getInstSizeInBytes(MI);
+  return 2;
 }
 
 // 引数で渡された分岐条件を反転する
 // 反転した場合はfalseを返す
 // 反転できない場合はtrueを返す
+//
+// analyzeBranch()で成功した(falseを返した)場合、
+// 一部の処理で分岐命令を書き換えるために呼び出される
+// 例: llvm/lib/CodeGen/BranchFolding.cpp
 bool RXInstrInfo::reverseBranchCondition(
     SmallVectorImpl<MachineOperand> &Cond) const {
-  return true;
+  LLVM_DEBUG(dbgs() << "### reverseBranchCondition\n");
+  // 参考 RISCV(のまま)
+
+  assert((Cond.size() == 3) && "Invalid branch condition!");
+  Cond[0].setImm(getOppositeBranchOpcode(Cond[0].getImm()));
+  return false;
 }
 
 // Pseudo生成後の処理
+// TODO RISCVではpseudoの展開処理はaddPreEmitPass2()のタイミングで追加されるパスで実行する
+// NOTE llvm/lib/Target/RISCV/RISCVTargetMachine.cpp
+// NOTE llvm/lib/Target/RISCV/RISCVExpandPseudoInsts.cpp
 bool RXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
   LLVM_DEBUG(dbgs() << "### expandPostRAPseudo " << MI << "\n");
 

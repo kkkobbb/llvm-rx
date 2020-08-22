@@ -88,7 +88,7 @@ def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 // NOTE isBarrier 制御フローを(常に)停止させる命令の場合、真
 // NOTE isTerminator BasicBlockを終了させる可能性がある場合、真
 // NOTE llvm/include/llvm/MC/MCInstrDesc.h
-let isBranch = 1, isTerminator = 1, isBarrier = 1, isReturn = 1 in
+let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def RTS : RXInst1<(outs), (ins), "rts", [(RXRts)]>;
 
 // 加算 i32 reg reg
@@ -284,7 +284,12 @@ def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
 }
 
 // 相対条件分岐
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+// analyzeBranch()に分岐命令として認識してもらいたくないため
+// (pBRCOND_*のanalyzeBranch()後にpBRCOND_*を置換してこの命令が生成される想定のため)
+// isBranchは設定しない
+// BasicBlockの末尾にはなるのでisTerminatorは設定する
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
+    isTerminator = 1 in
 class Branch_W<string asmstr>
     : RXInst3<(outs), (ins brtarget:$target),
               !strconcat(asmstr, " $target"), []>;
