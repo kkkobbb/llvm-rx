@@ -38,12 +38,20 @@ def RXInstrInfo : InstrInfo {
   let guessInstructionProperties = 0;
 }
 
+def RXAsmParser : AsmParser {
+  // 代替レジスタ名を使う
+  let ShouldEmitMatchRegisterAltName = 1;
+  // レジスタ名が被ってもいい
+  let AllowDuplicateRegisterNames = 1;
+}
+
 def RXAsmWriter : AsmWriter {
   int PassSubtarget = 1;
 }
 
 def RX : Target {
   let InstructionSet = RXInstrInfo;
+  let AssemblyParsers = [RXAsmParser];
   let AssemblyWriters = [RXAsmWriter];
   let AllowRegisterRenaming = 1;
 }
