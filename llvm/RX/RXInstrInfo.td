@@ -111,6 +111,25 @@ def MUL_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                       "mul $rs, $rs2, $rd",
                       [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
 
+// 符号付き乗算 2つの32bitレジスタに結果を格納する
+//
+// sdivが出た場合、smullohiを使って乗算に変換される
+//
+// rdとrd2は連番となる必要がある
+// 応急処置として以下の仕組みで連番にする
+//   GPR64_loはR2のみ GPR64_hiはR2 R3のみ
+//   GPR64_loでR2を選択し、その場合GPR64_hiではR2以外(R3)を選択する
+//     なるべく違うレジスタを選ぶっぽい
+//
+// ただし、常に上記の流れ通りに連番になるかは未確認で、
+// レジスタ割り当てに失敗するかもしれない
+// TODO EMUL_RR 他の方法があれば修正する or SMUL_LOHIもExpandにする
+//   (MULHS、SMUL_LOHI両方をExpandにした場合、sdivは変換されない)
+let Constraints = "$rd = $src" in
+def EMUL_RR : RXInst7<(outs GPR64_lo:$rd, GPR64_hi:$rd2), (ins GPR64_lo:$src, i32imm:$imm),
+                      "emul #$imm, $rd ; $rd2",
+                      [(set GPR64_lo:$rd, GPR64_hi:$rd2, (smullohi GPR64_lo:$src, imm:$imm))]>;
+
 // 符号付き除算 reg reg
 let Constraints = "$rd = $src" in
 def DIV_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),

@@ -57,8 +57,6 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   // スタックポインタの登録
   setStackPointerRegisterToSaveRestore(RX::R0);
 
-  // TODO setOperationAction 修正
-
   // NOTE Promote 型を大きな型として扱う
   setOperationAction(ISD::EXTLOAD,  MVT::i1,  Promote);
   setOperationAction(ISD::EXTLOAD,  MVT::i8,  Promote);
@@ -78,6 +76,13 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
   // NOTE (br_cc set*, lhs, rhs, dest) -> (brcond (set* lhs, rhs), dest)
   setOperationAction(ISD::BR_CC, MVT::i32, Expand);
+  // 即値で割る除算はデフォルトでは即値の乗算に変換する (除算が乗算より遅い想定)
+  // a:32bit変数 b:32bit即値  a / b = a * (2^32 / b) の上位32bit
+  // NOTE (*div reg, imm)
+  //      -> t = (sra (add (mulhs reg, i32), (mul reg, 0)), 1), (add t, (srl t 31))
+  //      -> t = (sra (add (smul_lohi reg, i32):1, (mul reg 0)), 1), (add t, (srl t, 31))
+  setOperationAction(ISD::MULHS, MVT::i32, Expand);
+  setOperationAction(ISD::MULHU, MVT::i32, Expand);
 
   // NOTE Custom LowerOperation()に渡す
 
