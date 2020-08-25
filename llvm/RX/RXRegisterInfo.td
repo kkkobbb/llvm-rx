@@ -40,4 +40,4 @@ def GPR : RegisterClass<"RX", [i32], 32,
   (add  (sequence "R%u", 0, 15))>;
 
 def GPR64_lo : RegisterClass<"RX", [i32], 32, (add R2)>;
-def GPR64_hi : RegisterClass<"RX", [i32], 32, (add R2, R3)>;
+def GPR64_hi : RegisterClass<"RX", [i32], 32, (add R3)>;
