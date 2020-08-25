@@ -44,20 +44,22 @@ def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_CallSeqEnd,
 // アドレス (bsr用)
 def bsrtarget : Operand<iPTR>;
 
+// アドレス (BasicBlock用)
+def brtarget : Operand<OtherVT>;
+
+// 2オペランドで表現されるアドレス ノード
+def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
+
 // displacement 16
 // dsp16の値の範囲は0-262140(18bit)だが、命令コードのビット表現では1/4して
 // 2bit落とした16bitになる
 // asmの記述では4の倍数のみ受け付ける
-def dsp16 : Operand<i32>, ImmLeaf<i32, [{return isUInt<18>(Imm);}]>;
-
-// アドレス (BasicBlock用)
-def brtarget : Operand<OtherVT>;
+// Operandとノードを同じ名前として定義している
+def dsp16 : Operand<i32>,
+            ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]>;
 
 // 5bit即値
 def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
-
-// 2オペランドで表現されるアドレス
-def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
 
 // TODO RX用の記述 Operand
 
