@@ -56,6 +56,8 @@ def brtarget : Operand<OtherVT>;
 // 符号なし18bit整数 (dsp16用)
 def uimm18 : ImmLeaf<i32, [{return isUInt<18>(Imm);}]>;
 
+def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
+
 // 2オペランドで表現されるアドレス
 def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
 
@@ -174,13 +176,28 @@ def XOR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                       "xor $rs, $rs2, $rd",
                       [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
 
+// 算術右シフト u5 reg reg
+def SHAR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
+                        "shar $imm, $rs, $rd",
+                        [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
+
+// 論理算術左シフト u5 reg reg
+def SHLL_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
+                        "shll $imm, $rs, $rd",
+                        [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
+
+// 論理右シフト u5 reg reg
+def SHLR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
+                        "shlr $imm, $rs, $rd",
+                        [(set GPR:$rd, (srl GPR:$rs, uimm5:$imm))]>;
+
 let Constraints = "$rd = $src" in {
 // 算術右シフト reg reg
 def SHAR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
                       "shar $rs, $rd",
                       [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
 
-// 算術左シフト reg reg
+// 論理算術左シフト reg reg
 def SHLL_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
                       "shll $rs, $rd",
                       [(set GPR:$rd, (shl GPR:$src, GPR:$rs))]>;
