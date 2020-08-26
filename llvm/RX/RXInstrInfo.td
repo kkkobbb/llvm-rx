@@ -61,6 +61,9 @@ def dsp16 : Operand<i32>,
 // 5bit即値
 def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
 
+// reg or imm
+def GPRIMM : Operand<i32>;
+
 // TODO RX用の記述 Operand
 
 
@@ -311,6 +314,10 @@ let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
 def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
                      "cmp $rs, $rs2", []>;
 
+// NOTE CMP_I32Rとは命令長が違うだけなので、asm出力しかしないなら差はない
+def CMP_UI4R : RXInst2<(outs), (ins i32imm:$imm, GPR:$rs),
+                       "cmp $imm, $rs", []>;
+
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
                        "cmp $imm, $rs", []>;
 }
@@ -341,8 +348,8 @@ def BLTU : Branch_W<"bltu">;  // >
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
 class BranchPseudo<PatFrag Cond>
-    : RXInstPseudo<(outs), (ins GPR:$lhs, GPR:$rhs, brtarget:$target),
-                   "", [(brcond (i32 (Cond GPR:$lhs, GPR:$rhs)), bb:$target)]>;
+    : RXInstPseudo<(outs), (ins GPRIMM:$lhs, GPR:$rhs, brtarget:$target),
+                   "", [(brcond (i32 (Cond i32:$lhs, GPR:$rhs)), bb:$target)]>;
 def pBRCOND_EQ  : BranchPseudo<seteq>;
 def pBRCOND_NE  : BranchPseudo<setne>;
 def pBRCOND_LT  : BranchPseudo<setlt>;
@@ -353,6 +360,8 @@ def pBRCOND_LE  : BranchPseudo<setle>;
 def pBRCOND_ULE : BranchPseudo<setule>;
 def pBRCOND_GE  : BranchPseudo<setge>;
 def pBRCOND_UGE : BranchPseudo<setuge>;
+
+def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>;
 
 // 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス

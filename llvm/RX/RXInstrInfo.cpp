@@ -379,9 +379,22 @@ bool RXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
     break;
   }
 
-  BuildMI(MBB, MI, MI.getDebugLoc(), get(RX::CMP_RR))
+  // pBRCOND_*のオペランドは(reg reg)か(imm reg)の2種類
+  if (MI.getOperand(0).isReg()) {
+    BuildMI(MBB, MI, MI.getDebugLoc(), get(RX::CMP_RR))
       .addReg(MI.getOperand(0).getReg())
       .addReg(MI.getOperand(1).getReg());
+  } else {
+    auto oprand0 = MI.getOperand(0).getImm();
+    auto opcode = RX::CMP_I32R;
+    // 4bit即値の比較が使える場合は使う
+    if (oprand0 >= 0 && oprand0 <=15)
+      opcode = RX::CMP_UI4R;
+
+    BuildMI(MBB, MI, MI.getDebugLoc(), get(opcode))
+      .addImm(oprand0)
+      .addReg(MI.getOperand(1).getReg());
+  }
 
   BuildMI(MBB, MI, MI.getDebugLoc(), get(brOp))
       .addMBB(MI.getOperand(2).getMBB());
