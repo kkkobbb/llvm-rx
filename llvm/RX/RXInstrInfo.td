@@ -89,6 +89,15 @@ def BSRA : RXInst4<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
 def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSRA tglobaladdr:$addr)>;
 def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 
+// 相対アドレスをレジスタに格納する方法が不明なので、レジスタに格納されるのは絶対アドレスのみ
+// BSR命令は使えないため、JSR命令を変わりに使う
+// なので、関数ポインタ、グローバル変数を使用するとPIC不可
+// TODO レジスタに相対アドレスを格納できればBSR命令を使用する
+let isCall = 1 in
+def JSR : RXInst2<(outs), (ins GPR:$rs), "jsr $rs",
+                   [(RXBsr GPR:$rs)]>;
+
+
 // サブルーチンからの復帰
 // NOTE isBarrier 制御フローを(常に)停止させる命令の場合、真
 // NOTE isTerminator BasicBlockを終了させる可能性がある場合、真

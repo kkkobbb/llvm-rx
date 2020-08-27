@@ -85,6 +85,8 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::MULHU, MVT::i32, Expand);
 
   // NOTE Custom LowerOperation()に渡す
+  // NOTE グローバル変数へのアクセス
+  setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
 
   // NOTE llvm/include/llvm/CodeGen/TargetLowering.h setMaxAtomicSizeInBitsSupported
   // NOTE バックエンドがサポートする最大のアトミック操作のサイズ
@@ -98,7 +100,30 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
 SDValue RXTargetLowering::LowerOperation(SDValue Op,
                                          SelectionDAG &DAG) const {
   // Custom に指定したノードに対する操作
-  llvm_unreachable("unimplemented custom");
+  switch (Op.getOpcode()) {
+  default:
+    report_fatal_error("unimplemented operand");
+  case ISD::GlobalAddress:
+    return lowerGlobalAddress(Op, DAG);
+  }
+}
+
+SDValue RXTargetLowering::lowerGlobalAddress(SDValue Op,
+                                             SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT Ty = Op.getValueType();
+  GlobalAddressSDNode *N = cast<GlobalAddressSDNode>(Op);
+  int64_t Offset = N->getOffset();
+
+  // NOTE 絶対アドレスを格納するのでBSR命令では使えない
+  // TODO 相対アドレスを格納する？
+  SDValue Target = DAG.getTargetGlobalAddress(N->getGlobal(), DL, Ty, 0, 0);
+  SDValue Addr = SDValue(DAG.getMachineNode(RX::MOV_I32R, SDLoc(N), Ty, Target), 0);
+
+  if (Offset != 0)
+    return DAG.getNode(ISD::ADD, DL, Ty, Addr,
+                       DAG.getConstant(Offset, DL, MVT::i32));
+  return Addr;
 }
 
 // NOTE llvm/include/llvm/CodeGen/TargetLowering.h EmitInstrWithCustomInserter

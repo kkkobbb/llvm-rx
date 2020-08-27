@@ -74,6 +74,8 @@ private:
                           const SmallVectorImpl<ISD::InputArg> &Ins,
                           const SDLoc &dl, SelectionDAG &DAG,
                           SmallVectorImpl<SDValue> &InVals) const;
+
+  SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
 };
 }
 
