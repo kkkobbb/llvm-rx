@@ -177,17 +177,17 @@ def XOR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
 
 // 算術右シフト u5 reg reg
 def SHAR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
-                        "shar $imm, $rs, $rd",
+                        "shar #$imm, $rs, $rd",
                         [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
 
 // 論理算術左シフト u5 reg reg
 def SHLL_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
-                        "shll $imm, $rs, $rd",
+                        "shll #$imm, $rs, $rd",
                         [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
 
 // 論理右シフト u5 reg reg
 def SHLR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
-                        "shlr $imm, $rs, $rd",
+                        "shlr #$imm, $rs, $rd",
                         [(set GPR:$rd, (srl GPR:$rs, uimm5:$imm))]>;
 
 let Constraints = "$rd = $src" in {
@@ -316,10 +316,10 @@ def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
 
 // NOTE CMP_I32Rとは命令長が違うだけなので、asm出力しかしないなら差はない
 def CMP_UI4R : RXInst2<(outs), (ins i32imm:$imm, GPR:$rs),
-                       "cmp $imm, $rs", []>;
+                       "cmp #$imm, $rs", []>;
 
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
-                       "cmp $imm, $rs", []>;
+                       "cmp #$imm, $rs", []>;
 }
 
 // 相対条件分岐
