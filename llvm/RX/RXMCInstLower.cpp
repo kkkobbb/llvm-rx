@@ -29,7 +29,8 @@ using namespace llvm;
 
 static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
                                     const AsmPrinter &AP) {
-  // TODO ほぼRISCV
+  // NOTE ほぼRISCV
+  // TODO コード未確認
   MCContext &Ctx = AP.OutContext;
 
   const MCExpr *ME =
@@ -47,7 +48,8 @@ bool llvm::LowerRXMachineOperandToMCOperand(const MachineOperand &MO,
                                             const AsmPrinter &AP) {
   LLVM_DEBUG(dbgs() << "### LowerRXMachineOperandToMCOperand 0\n");
 
-  // TODO ほぼRISCV あまりターゲット依存がない？
+  // NOTE ほぼRISCV あまりターゲット依存がない？
+  // TODO コード未確認
   switch (MO.getType()) {
   default:
     report_fatal_error("LowerRXMachineInstrToMCInst: unknown operand type");
@@ -87,7 +89,8 @@ bool llvm::LowerRXMachineOperandToMCOperand(const MachineOperand &MO,
 void llvm::LowerRXMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
                                        const AsmPrinter &AP) {
   LLVM_DEBUG(dbgs() << "### LowerRXMachineInstrToMCInst " << *MI << "\n");
-  // TODO ほぼRISCV あまりターゲット依存がない？
+  // NOTE ほぼRISCV あまりターゲット依存がない？
+  // TODO コード未確認
   OutMI.setOpcode(MI->getOpcode());
 
   for (const MachineOperand &MO : MI->operands()) {

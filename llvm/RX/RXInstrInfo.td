@@ -25,8 +25,6 @@ def RXBsr : SDNode<"RXISD::BSR", SDT_RXBsr,
 def RXRts : SDNode<"RXISD::RTS", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
-// TODO RX用の記述 DAG Node
-
 // Target-independent type requirements, but with target-specific formats.
 def SDT_CallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 def SDT_CallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
@@ -63,8 +61,6 @@ def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
 
 // reg or imm
 def GPRIMM : Operand<i32>;
-
-// TODO RX用の記述 Operand
 
 
 //===----------------------------------------------------------------------===//
@@ -378,8 +374,6 @@ let isBranch = 1, isTerminator = 1, isBarrier = 1 in
 def BRA : RXInst2<(outs), (ins brtarget:$target),
                   "bra $target",
                   [(br bb:$target)]>;
-
-// TODO RX用の記述 Instruction
 
 
 // Callの開始終了を表す疑似命令

@@ -52,9 +52,6 @@ public:
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
   // This method returns the name of a target specific DAG node.
   const char *getTargetNodeName(unsigned Opcode) const override;
-  MachineBasicBlock *
-  EmitInstrWithCustomInserter(MachineInstr &MI,
-                              MachineBasicBlock *BB) const override;
 
 private:
   // Lower incoming arguments, copy physregs into vregs

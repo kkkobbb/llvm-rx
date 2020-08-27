@@ -88,7 +88,7 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
 // push BranchOpcode, Reg1, Reg2.
 static void parseCondBranch(MachineInstr &LastInst, MachineBasicBlock *&Target,
                             SmallVectorImpl<MachineOperand> &Cond) {
-  // 参考 RISCV(のまま)
+  // NOTE ほぼRISCV
 
   // Block ends with fall-through condbranch.
   assert(LastInst.getDesc().isConditionalBranch() &&
@@ -150,7 +150,7 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
                                 SmallVectorImpl<MachineOperand> &Cond,
                                 bool AllowModify) const {
   LLVM_DEBUG(dbgs() << "### analyzeBranch " << MBB << "\n");
-  // 参考 RISCV(のまま)
+  // NOTE ほぼRISCV
 
   TBB = FBB = nullptr;
   Cond.clear();
@@ -230,7 +230,7 @@ unsigned RXInstrInfo::removeBranch(MachineBasicBlock &MBB,
   // 3. 条件分岐と無条件分岐の組み合わせ
   //   b*  LBL1
   //   bra LBL2
-  // 参考 RISCV(のまま)
+  // NOTE ほぼRISCV
 
   if (BytesRemoved)
     *BytesRemoved = 0;
@@ -280,7 +280,7 @@ unsigned RXInstrInfo::insertBranch(
   // CondにはanalyzeBranch()によって
   // 条件分岐の場合、[pBRCOND_*, lhs(reg), rhs(reg)]が格納される
   // 無条件分岐の場合、空になる
-  // 参考 RISCV(のまま)
+  // NOTE ほぼRISCV
 
   if (BytesAdded)
     *BytesAdded = 0;
@@ -326,7 +326,7 @@ unsigned RXInstrInfo::insertBranch(
 bool RXInstrInfo::reverseBranchCondition(
     SmallVectorImpl<MachineOperand> &Cond) const {
   LLVM_DEBUG(dbgs() << "### reverseBranchCondition\n");
-  // 参考 RISCV(のまま)
+  // NOTE ほぼRISCV
 
   assert((Cond.size() == 3) && "Invalid branch condition!");
   Cond[0].setImm(getOppositeBranchOpcode(Cond[0].getImm()));
