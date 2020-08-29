@@ -228,9 +228,9 @@ def MOV_I32R : RXInst6<(outs GPR:$rd), (ins i32imm:$imm),
                        [(set GPR:$rd, imm:$imm)]>;
 
 // move reg reg (long)
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 def MOVL_RR : RXInst2<(outs GPR:$rd), (ins GPR:$rs),
-                      "mov.l $rs, $rd",
-                      [(set GPR:$rd, GPR:$rs)]>;
+                      "mov.l $rs, $rd", []>;
 
 // load (long)
 def MOVL_pRR : RXInst2<(outs GPR:$rd), (ins GPR:$rs),
