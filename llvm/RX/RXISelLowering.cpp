@@ -95,6 +95,10 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
 
   // booleanの表現型
   setBooleanContents(ZeroOrOneBooleanContent);
+
+  // jumptableを生成する最小値を大きな値にしてjumptableを生成しないようにしてるっぽい
+  // Effectively disable jump table generation.
+  setMinimumJumpTableEntries(INT_MAX);
 }
 
 SDValue RXTargetLowering::LowerOperation(SDValue Op,
