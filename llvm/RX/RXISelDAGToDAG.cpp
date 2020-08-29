@@ -55,12 +55,29 @@ public:
 
 void RXDAGToDAGISel::Select(SDNode *Node) {
   LLVM_DEBUG(dbgs() << "### Select\n");
+  // NOTE ほぼRISCV
 
   // If we have a custom node, we have already selected.
   if (Node->isMachineOpcode()) {
     LLVM_DEBUG(dbgs() << "== "; Node->dump(CurDAG); dbgs() << "\n");
     Node->setNodeId(-1);
     return;
+  }
+
+  // Instruction Selection not handled by the auto-generated tablegen selection
+  // should be handled here.
+  unsigned Opcode = Node->getOpcode();
+  SDLoc DL(Node);
+  EVT VT = Node->getValueType(0);
+
+  switch (Opcode) {
+  case ISD::FrameIndex: {
+    SDValue Imm = CurDAG->getTargetConstant(0, DL, MVT::i32);
+    int FI = cast<FrameIndexSDNode>(Node)->getIndex();
+    SDValue TFI = CurDAG->getTargetFrameIndex(FI, VT);
+    ReplaceNode(Node, CurDAG->getMachineNode(RX::ADD_I32RR, DL, VT, TFI, Imm));
+    return;
+  }
   }
 
   // Select the default instruction.
