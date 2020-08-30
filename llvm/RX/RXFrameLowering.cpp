@@ -30,6 +30,30 @@ bool RXFrameLowering::hasFP(const MachineFunction &MF) const {
   return false;
 }
 
+// DestReg = SrcReg + Val を生成する
+void RXFrameLowering::adjustReg(MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator MBBI,
+                                const DebugLoc &DL, Register DestReg,
+                                Register SrcReg, int64_t Val,
+                                MachineInstr::MIFlag Flag) const {
+  MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
+  const RXInstrInfo *TII = STI.getInstrInfo();
+
+  if (DestReg == SrcReg && Val == 0)
+    return;
+
+  // NOTE ここでレジスタを新しく用意して使う
+  // 本来ADD_I32RRでいいが、レジスタ確保をする例としてADD_RRRを使う
+  Register ScratchReg = MRI.createVirtualRegister(&RX::GPRRegClass);
+  BuildMI(MBB, MBBI, DL, TII->get(RX::MOV_I32R), ScratchReg)
+    .addImm(Val)
+    .setMIFlag(Flag);
+  BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_RRR), DestReg)
+    .addReg(SrcReg)
+    .addReg(ScratchReg, RegState::Kill)
+    .setMIFlag(Flag);
+}
+
 void RXFrameLowering::emitPrologue(MachineFunction &MF,
                                    MachineBasicBlock &MBB) const {
   assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
@@ -80,6 +104,9 @@ void RXFrameLowering::emitEpilogue(MachineFunction &MF,
 MachineBasicBlock::iterator RXFrameLowering::eliminateCallFramePseudoInstr(
     MachineFunction &MF, MachineBasicBlock &MBB,
     MachineBasicBlock::iterator MI) const {
+  // NOTE ほぼRISCV
+  Register SPReg = RX::R0;
+  DebugLoc DL = MI->getDebugLoc();
 
   if (!hasReservedCallFrame(MF)) {
     // If space has not been reserved for a call frame, ADJCALLSTACKDOWN and
@@ -91,7 +118,12 @@ MachineBasicBlock::iterator RXFrameLowering::eliminateCallFramePseudoInstr(
 
     if (Amount != 0) {
       // Ensure the stack remains aligned after adjustment.
-      // TODO 未実装
+      Amount = alignSPAdjust(Amount);
+
+      if (MI->getOpcode() == RX::ADJCALLSTACKDOWN)
+        Amount = -Amount;
+
+      adjustReg(MBB, MI, DL, SPReg, SPReg, Amount, MachineInstr::NoFlags);
     }
   }
 

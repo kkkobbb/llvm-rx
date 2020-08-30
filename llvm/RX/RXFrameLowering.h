@@ -35,6 +35,11 @@ public:
 
 protected:
   const RXSubtarget &STI;
+
+private:
+  void adjustReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+                 const DebugLoc &DL, Register DestReg, Register SrcReg,
+                 int64_t Val, MachineInstr::MIFlag Flag) const;
 };
 }
 #endif
