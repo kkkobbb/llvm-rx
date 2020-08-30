@@ -27,10 +27,11 @@ using namespace llvm;
 
 #define DEBUG_TYPE "rx-mcinstlower"
 
+// ラベル等のシンボルをMCOperandに変換する
 static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
                                     const AsmPrinter &AP) {
+  LLVM_DEBUG(dbgs() << "### lowerSymbolOperand " << MO << ", " << *Sym << "\n");
   // NOTE ほぼRISCV
-  // TODO コード未確認
   MCContext &Ctx = AP.OutContext;
 
   const MCExpr *ME =
@@ -43,13 +44,13 @@ static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
   return MCOperand::createExpr(ME);
 }
 
+// オペランド(MO)が出力すべきな場合、MCOpに変換後のオペランドをセットして真を返す
+// 出力不要の場合、偽を返す
 bool llvm::LowerRXMachineOperandToMCOperand(const MachineOperand &MO,
                                             MCOperand &MCOp,
                                             const AsmPrinter &AP) {
-  LLVM_DEBUG(dbgs() << "### LowerRXMachineOperandToMCOperand 0\n");
-
+  LLVM_DEBUG(dbgs() << "### LowerRXMachineOperandToMCOperand " << MO << "\n");
   // NOTE ほぼRISCV あまりターゲット依存がない？
-  // TODO コード未確認
   switch (MO.getType()) {
   default:
     report_fatal_error("LowerRXMachineInstrToMCInst: unknown operand type");
@@ -86,11 +87,11 @@ bool llvm::LowerRXMachineOperandToMCOperand(const MachineOperand &MO,
   return true;
 }
 
+// OutMIにオペコード、オペランドをセットする
 void llvm::LowerRXMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
                                        const AsmPrinter &AP) {
   LLVM_DEBUG(dbgs() << "### LowerRXMachineInstrToMCInst " << *MI << "\n");
   // NOTE ほぼRISCV あまりターゲット依存がない？
-  // TODO コード未確認
   OutMI.setOpcode(MI->getOpcode());
 
   for (const MachineOperand &MO : MI->operands()) {
