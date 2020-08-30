@@ -167,6 +167,10 @@
         * `(br_cc ...)` -> `(brcond (seteq等 ...) ...)`
     * `setOperationAction(ISD::BR_JT, MVT::Other, Expand);`
         * `(br_jt reg, jumptable)` -> `(brind reg)`
+    * `setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);`
+        * `(select_cc a, b, c, d, set_*)` -> `(select x, c, d)`
+            * `(select_cc a, b, c, d, set_*)`  aとbを`set_*`で比較し、真ならc、偽ならdの値を返す
+            * `(select x, c, d)`  xが真ならc、偽ならdの値を返す
 
 ### analyzeBranch()
 * 分岐命令の最適化ができる部分を探すための分析 (llvmに最適化のヒントを与える)
