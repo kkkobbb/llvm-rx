@@ -1,13 +1,16 @@
 #!/bin/sh
-# RX用の アセンブル、リンク、gdb simで実行
+# 引数の.sファイルをアセンブル、リンクし、gdb simで実行する
+# 実行時./asm/start.sファイルが存在する必要がる
 
 RXPREFIX="${HOME}/rx-binutils/bin/rx-elf-"
 RXAS="${RXPREFIX}as"
 RXLD="${RXPREFIX}ld"
 RXGDB="${RXPREFIX}gdb"
+RXSTART="./asm/start.s"
 
 if [ $# -ne 1 ]; then
-    echo "Error: arg (./run_asm.sh <asm-file>)"
+    echo "Error: args"
+    echo "Usage: ./run_asm.sh <asm-file>"
     exit 1
 fi
 
@@ -25,7 +28,7 @@ trap atexit EXIT
 tmpdir=$(mktemp -d)
 
 # build
-$RXAS asm/start.s -o $tmpdir/start.o
+$RXAS $RXSTART -o $tmpdir/start.o
 $RXAS $SRC -o $tmpdir/$OBJ
 $RXLD $tmpdir/start.o $tmpdir/$OBJ -o $tmpdir/$ELF
 
