@@ -328,12 +328,8 @@ def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
 }
 
 // 相対条件分岐
-// analyzeBranch()に分岐命令として認識してもらいたくないため
-// (pBRCOND_*のanalyzeBranch()後にpBRCOND_*を置換してこの命令が生成される想定のため)
-// isBranchは設定しない
-// BasicBlockの末尾にはなるのでisTerminatorは設定する
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
-    isTerminator = 1 in
+    isBranch = 1, isTerminator = 1 in
 class Branch_W<string asmstr>
     : RXInst3<(outs), (ins brtarget:$target),
               !strconcat(asmstr, " $target"), []>;

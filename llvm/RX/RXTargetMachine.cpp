@@ -35,6 +35,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRXTarget() {
 
   PassRegistry *PR = PassRegistry::getPassRegistry();
   initializeGlobalISel(*PR);
+  initializeRXExpandPseudoPass(*PR);
 }
 
 static StringRef computeDataLayout(const Triple &TT) {
@@ -80,6 +81,7 @@ public:
   }
 
   bool addInstSelector() override;
+  void addPreEmitPass2() override;
 };
 }
 
@@ -91,4 +93,11 @@ bool RXPassConfig::addInstSelector() {
   addPass(createRXISelDag(getRXTargetMachine()));
 
   return false;
+}
+
+void RXPassConfig::addPreEmitPass2() {
+  // Schedule the expansion of AMOs at the last possible moment, avoiding the
+  // possibility for other passes to break the requirements for forward
+  // progress in the LR/SC block.
+  addPass(createRXExpandPseudoPass());
 }

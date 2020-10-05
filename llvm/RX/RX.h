@@ -34,9 +34,10 @@ bool LowerRXMachineOperandToMCOperand(const MachineOperand &MO,
                                       MCOperand &MCOp, const AsmPrinter &AP);
 
 FunctionPass *createRXISelDag(RXTargetMachine &TM);
-FunctionPass *createRXDelaySlotFillerPass();
 
-void initializeRXDelaySlotFillerPass(PassRegistry &);
+FunctionPass *createRXExpandPseudoPass();
+void initializeRXExpandPseudoPass(PassRegistry &);
+
 }
 
 #endif

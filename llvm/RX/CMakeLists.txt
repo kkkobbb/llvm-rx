@@ -14,6 +14,7 @@ add_public_tablegen_target(RXCommonTableGen)
 
 add_llvm_target(RXCodeGen
   RXAsmPrinter.cpp
+  RXExpandPseudoInsts.cpp
   RXFrameLowering.cpp
   RXISelDAGToDAG.cpp
   RXISelLowering.cpp
