@@ -77,7 +77,7 @@ include "RXInstrFormats.td"
 // NOTE パターンに現れるsetはノードではなく出力レジスタを表現するための記述のため、Pat<>には記述する必要がない(できない?)
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def NOP : RXInst1<(outs), (ins), "nop", []>;
+def NOP : RXInst1_Op<0b00000011, (outs), (ins), "nop", []>;
 
 // 相対サブルーチン分岐 pcdsp:24
 let isCall = 1 in
@@ -90,8 +90,8 @@ def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 // なので、関数ポインタ、グローバル変数を使用するとPIC不可
 // TODO レジスタに相対アドレスを格納できればBSR命令を使用する
 let isCall = 1 in
-def JSR : RXInst2<(outs), (ins GPR:$rs), "jsr $rs",
-                   [(RXBsr GPR:$rs)]>;
+def JSR : RXInst2_OpRs<0b011111110001, (outs), (ins GPR:$rs), "jsr $rs",
+                       [(RXBsr GPR:$rs)]>;
 
 
 // サブルーチンからの復帰
@@ -99,7 +99,7 @@ def JSR : RXInst2<(outs), (ins GPR:$rs), "jsr $rs",
 // NOTE isTerminator BasicBlockを終了させる可能性がある場合、真
 // NOTE llvm/include/llvm/MC/MCInstrDesc.h
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
-def RTS : RXInst1<(outs), (ins), "rts", [(RXRts)]>;
+def RTS : RXInst1_Op<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
 
 // 加算 i32 reg reg
 def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
@@ -229,18 +229,21 @@ def MOV_I32R : RXInst6<(outs GPR:$rd), (ins i32imm:$imm),
 
 // move reg reg (long)
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def MOVL_RR : RXInst2<(outs GPR:$rd), (ins GPR:$rs),
-                      "mov.l $rs, $rd", []>;
+def MOVL_RR : RXInst2_OpSzLdLdRsRd<SIZE_L, LD_DIRECT, LD_DIRECT,
+                                   (outs GPR:$rd), (ins GPR:$rs),
+                                   "mov.l $rs, $rd", []>;
 
 // load (long)
-def MOVL_pRR : RXInst2<(outs GPR:$rd), (ins GPR:$rs),
-                       "mov.l [$rs], $rd",
-                       [(set GPR:$rd, (load GPR:$rs))]>;
+def MOVL_pRR : RXInst2_OpSzLdLdRsRd<SIZE_L, LD_DIRECT, LD_INDIRECT,
+                                    (outs GPR:$rd), (ins GPR:$rs),
+                                    "mov.l [$rs], $rd",
+                                    [(set GPR:$rd, (load GPR:$rs))]>;
 
 // store (long)
-def MOVL_RpR : RXInst2<(outs), (ins GPR:$rd, GPR:$rs),
-                       "mov.l $rs, [$rd]",
-                       [(store GPR:$rs, GPR:$rd)]>;
+def MOVL_RpR : RXInst2_OpSzLdLdRdRs<SIZE_L, LD_INDIRECT, LD_DIRECT,
+                                    (outs), (ins GPR:$rd, GPR:$rs),
+                                    "mov.l $rs, [$rd]",
+                                    [(store GPR:$rs, GPR:$rd)]>;
 
 // NOTE *extload* 上位ビット拡張ロード
 // displacement load (byte)
@@ -306,22 +309,24 @@ let Defs = [R0], Uses = [R0] in {
 // NOTE 未使用
 // pop レジスタ
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
-def POP : RXInst2<(outs GPR:$rd), (ins), "pop $rd", []>;
+def POP : RXInst2_OpRd<0b011111101011, (outs GPR:$rd), (ins), "pop $rd", []>;
 
 // NOTE 未使用
 // push レジスタ
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
-def PUSHL_R : RXInst2<(outs), (ins GPR:$rs), "push.l $rs", []>;
+def PUSHL_R : RXInst2_OpSzRs<0b0111111010, SIZE_L, (outs), (ins GPR:$rs),
+                             "push.l $rs", []>;
 }
 
 // 比較
 let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
-def CMP_RR : RXInst2<(outs), (ins GPR:$rs, GPR:$rs2),
-                     "cmp $rs, $rs2", []>;
+def CMP_RR : RXInst2_OpLdRsRs<0b010001, LD_DIRECT,
+                              (outs), (ins GPR:$rs, GPR:$rs2),
+                              "cmp $rs, $rs2", []>;
 
 // NOTE CMP_I32Rとは命令長が違うだけなので、asm出力しかしないなら差はない
-def CMP_UI4R : RXInst2<(outs), (ins i32imm:$imm, GPR:$rs),
-                       "cmp #$imm, $rs", []>;
+def CMP_UI4R : RXInst2_OpUi4Rs<0b01100001, (outs), (ins i32imm:$imm, GPR:$rs),
+                               "cmp #$imm, $rs", []>;
 
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
                        "cmp #$imm, $rs", []>;
@@ -367,9 +372,8 @@ def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>
 // 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス
 let isBranch = 1, isTerminator = 1, isBarrier = 1 in
-def BRA : RXInst2<(outs), (ins brtarget:$target),
-                  "bra $target",
-                  [(br bb:$target)]>;
+def BRA : RXInst2_OpRs<0b011111110100, (outs), (ins brtarget:$rs),
+                       "bra $rs", [(br bb:$rs)]>;
 
 
 // Callの開始終了を表す疑似命令
