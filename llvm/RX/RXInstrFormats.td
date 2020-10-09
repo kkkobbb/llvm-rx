@@ -21,6 +21,25 @@ def SIZE_B : RXSize<0b00>;
 def SIZE_W : RXSize<0b01>;
 def SIZE_L : RXSize<0b10>;
 
+class RXCd<bits<4> val> {
+  bits<4> Value = val;
+}
+def CD_BEQ  : RXCd<0b0000>;
+def CD_BNE  : RXCd<0b0001>;
+def CD_BGEU : RXCd<0b0010>;
+def CD_BLTU : RXCd<0b0010>;
+def CD_BGTU : RXCd<0b0011>;
+def CD_BLEU : RXCd<0b0101>;
+def CD_BPZ  : RXCd<0b0110>;
+def CD_BN   : RXCd<0b0111>;
+def CD_BGE  : RXCd<0b1000>;
+def CD_BLT  : RXCd<0b1001>;
+def CD_BGT  : RXCd<0b1010>;
+def CD_BLE  : RXCd<0b1011>;
+def CD_BO   : RXCd<0b1100>;
+def CD_BNO  : RXCd<0b1101>;
+def CD_BRAB : RXCd<0b1110>;
+
 
 // NOTE llvm/include/llvm/Target/Target.td Instruction
 
@@ -141,6 +160,15 @@ class RXInst2_OpUi4Rs<bits<8> opcode, dag outs, dag ins,
   let Inst{3-0} = rs;
 }
 
+class RXInst2_OpCdDsp<RXCd cd, dag outs, dag ins, string asmstr,
+                      list<dag> pattern>
+    : RXInst2<outs, ins, asmstr, pattern> {
+  bits<8> dsp;
+
+  let Inst{15-12} = 0b0010;
+  let Inst{11-8} = cd.Value;
+  let Inst{7-0} = dsp;
+}
 
 // 3byte format
 class RXInst3<dag outs, dag ins, string asmstr, list<dag> pattern>

@@ -175,10 +175,11 @@ def OR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
                      "or $rs, $rs2, $rd",
                      [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
 
-// XOR reg reg reg
-def XOR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                      "xor $rs, $rs2, $rd",
-                      [(set GPR:$rd, (xor GPR:$rs2, GPR:$rs))]>;
+// XOR reg reg
+let Constraints = "$rd = $src" in
+def XOR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
+                     "xor $rs, $rd",
+                     [(set GPR:$rd, (xor GPR:$src, GPR:$rs))]>;
 
 // 算術右シフト u5 reg reg
 def SHAR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
@@ -333,21 +334,22 @@ def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
 }
 
 // 相対条件分岐
+// 分岐先は-128 <= pcdsp <= 127
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
-class Branch_W<string asmstr>
-    : RXInst3<(outs), (ins brtarget:$target),
-              !strconcat(asmstr, " $target"), []>;
-def BEQ  : Branch_W<"beq">;   // ==
-def BNE  : Branch_W<"bne">;   // !=
-def BGE  : Branch_W<"bge">;   // <= (符号付き)
-def BLE  : Branch_W<"ble">;   // >= (符号付き)
-def BGT  : Branch_W<"bgt">;   // <  (符号付き)
-def BLT  : Branch_W<"blt">;   // >  (符号付き)
-def BGEU : Branch_W<"bgeu">;  // <=
-def BLEU : Branch_W<"bleu">;  // >=
-def BGTU : Branch_W<"bgtu">;  // <
-def BLTU : Branch_W<"bltu">;  // >
+class Branch_B<RXCd cd, string asmstr>
+    : RXInst2_OpCdDsp<cd, (outs), (ins brtarget:$dsp),
+                      !strconcat(asmstr, " $dsp"), []>;
+def BEQ  : Branch_B<CD_BEQ, "beq">;    // ==
+def BNE  : Branch_B<CD_BNE, "bne">;    // !=
+def BGE  : Branch_B<CD_BGE, "bge">;    // <= (符号付き)
+def BLE  : Branch_B<CD_BLE, "ble">;    // >= (符号付き)
+def BGT  : Branch_B<CD_BGT, "bgt">;    // <  (符号付き)
+def BLT  : Branch_B<CD_BLT, "blt">;    // >  (符号付き)
+def BGEU : Branch_B<CD_BGEU, "bgeu">;  // <=
+def BLEU : Branch_B<CD_BLEU, "bleu">;  // >=
+def BGTU : Branch_B<CD_BGTU, "bgtu">;  // <
+def BLTU : Branch_B<CD_BLTU, "bltu">;  // >
 
 // 分岐仮想命令
 // 後の処理で<比較>と<相対条件分岐>に変換される
