@@ -137,12 +137,14 @@ def MUL_RRR : I3_OpRdRsRs<0b111111110011, (outs GPR:$rd),
 // GPR64_loはR2のみ GPR64_hiはR3のみとして連番にしている
 //
 // ただし、レジスタ割り当てに失敗するかもしれない
-// TODO EMUL_RR 他の方法があれば修正する or SMUL_LOHIもExpandにする
+// TODO EMUL_I32R 他の方法があれば修正する or SMUL_LOHIもExpandにする
 //   (MULHS、SMUL_LOHI両方をExpandにした場合、sdivは変換されない)
 let Constraints = "$rd = $src" in
-def EMUL_RR : RXInst7<(outs GPR64_lo:$rd, GPR64_hi:$rd2), (ins GPR64_lo:$src, i32imm:$imm),
-                      "emul #$imm, $rd ; $rd2",
-                      [(set GPR64_lo:$rd, GPR64_hi:$rd2, (smullohi GPR64_lo:$src, imm:$imm))]>;
+def EMUL_I32R : I7_OpLiRdI32<0b111111010111,
+                             (outs GPR64_lo:$rd, GPR64_hi:$rd2),
+                             (ins GPR64_lo:$src, i32imm:$imm),
+                             "emul #$imm, $rd ; $rd2",
+                             [(set GPR64_lo:$rd, GPR64_hi:$rd2, (smullohi GPR64_lo:$src, imm:$imm))]>;
 
 // 符号付き除算 reg reg
 let Constraints = "$rd = $src" in
@@ -323,9 +325,10 @@ def MOVW_I16D16 : I6_OpLdRdLiSzD16I16<0b111110, SIZE_W, (outs),
                                       [(truncstorei16 (i32 imm16:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store i32
-def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
-                          "mov.l #$imm, $dsp[$rd]",
-                          [(store (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVL_I32D16 : I8_OpLdRdLiSzD16I32<0b111110, SIZE_L, (outs),
+                                      (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
+                                      "mov.l #$imm, $dsp[$rd]",
+                                      [(store (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement load unsigned (byte)
 def MOVUB_D16R : I4_OpSLdRsRdD16<0b01011, SIZE1_B, (outs GPR:$rd),

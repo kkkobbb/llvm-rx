@@ -397,9 +397,38 @@ class RXInst7<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 7;
 }
 
+class I7_OpLiRdI32<bits<12> opcode, dag outs, dag ins, string asmstr,
+                   list<dag> pattern>
+    : RXInst7<outs, ins, asmstr, pattern> {
+  field bits<4> rd;
+  field bits<32> imm;
+
+  let Inst{55-44} = opcode;
+  let Inst{43-42} = LI_IMM32.Value;
+  let Inst{41-36} = 0b000110;
+  let Inst{35-32} = rd;
+  let Inst{31-0} = imm;
+}
+
 // 8byte format
 class RXInst8<dag outs, dag ins, string asmstr, list<dag> pattern>
     : RXInst<outs, ins, asmstr, pattern> {
   field bits<64> Inst;
   let Size = 8;
+}
+
+class I8_OpLdRdLiSzD16I32<bits<6> opcode, RXSize size, dag outs, dag ins,
+                          string asmstr, list<dag> pattern>
+    : RXInst8<outs, ins, asmstr, pattern> {
+  field bits<4> rd;
+  field bits<16> dsp;
+  field bits<32> imm;
+
+  let Inst{63-58} = opcode;
+  let Inst{57-56} = LD_INDDSP16.Value;
+  let Inst{55-52} = rd;
+  let Inst{51-50} = LI_IMM32.Value;
+  let Inst{49-48} = size.Value;
+  let Inst{47-32} = dsp;
+  let Inst{31-0} = imm;
 }

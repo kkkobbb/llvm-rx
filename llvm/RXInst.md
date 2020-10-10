@@ -148,3 +148,19 @@ MOVW_I16D16  111110 ld rd== li sz dsp16bit imm16bit (ld=10, li=10 only)
 ```
 CMP_I32R     011101 li 0000 rs2= imm32bit (li=00 only)
 ```
+
+
+## 7byte命令
+
+### I7_OpLiRdI32
+```
+EMUL_I32R  111111010111 li 000110 rd== imm32bit (li=00 only)
+```
+
+
+## 8byte命令
+
+### I8_OpLdRdLiSzD16I32
+```
+MOVL_I32D16 111110 ld rd== li sz dsp16bit imm32bit (ld=10, li=00 only)
+```
