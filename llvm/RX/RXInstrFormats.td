@@ -33,8 +33,8 @@ class RXCd<bits<4> val> {
 def CD_BEQ  : RXCd<0b0000>;
 def CD_BNE  : RXCd<0b0001>;
 def CD_BGEU : RXCd<0b0010>;
-def CD_BLTU : RXCd<0b0010>;
-def CD_BGTU : RXCd<0b0011>;
+def CD_BLTU : RXCd<0b0011>;
+def CD_BGTU : RXCd<0b0100>;
 def CD_BLEU : RXCd<0b0101>;
 def CD_BPZ  : RXCd<0b0110>;
 def CD_BN   : RXCd<0b0111>;
@@ -248,7 +248,7 @@ class RXInst4_OpPcdsp<bits<8> opcode, dag outs, dag ins, string asmstr,
   let Inst{23-0} = pcdsp;
 }
 
-class RXInst4_OpSzLdRsRdD16<RXSize size, RXLd ld, dag outs, dag ins,
+class RXInst4_OpSzLdRsRdD16<RXSize size, dag outs, dag ins,
                             string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<4> rs;
@@ -258,13 +258,13 @@ class RXInst4_OpSzLdRsRdD16<RXSize size, RXLd ld, dag outs, dag ins,
   let Inst{31-30} = 0b11;
   let Inst{29-28} = size.Value;
   let Inst{27-26} = 0b11;
-  let Inst{25-24} = ld.Value;
+  let Inst{25-24} = LD_INDDSP16.Value;
   let Inst{23-20} = rs;
   let Inst{19-16} = rd;
   let Inst{15-0} = dsp;
 }
 
-class RXInst4_OpSzLdRdRsD16<RXSize size, RXLd ld, dag outs, dag ins,
+class RXInst4_OpSzLdRdRsD16<RXSize size, dag outs, dag ins,
                             string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<4> rd;
@@ -273,15 +273,15 @@ class RXInst4_OpSzLdRdRsD16<RXSize size, RXLd ld, dag outs, dag ins,
 
   let Inst{31-30} = 0b11;
   let Inst{29-28} = size.Value;
-  let Inst{27-26} = ld.Value;
+  let Inst{27-26} = LD_INDDSP16.Value;
   let Inst{25-24} = 0b11;
   let Inst{23-20} = rd;
   let Inst{19-16} = rs;
   let Inst{15-0} = dsp;
 }
 
-class RXInst4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, RXLd ld, dag outs,
-                           dag ins, string asmstr, list<dag> pattern>
+class RXInst4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, dag outs, dag ins,
+                           string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<4> rs;
   field bits<4> rd;
@@ -289,7 +289,7 @@ class RXInst4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, RXLd ld, dag outs,
 
   let Inst{31-27} = opcode;
   let Inst{26} = size.Value;
-  let Inst{25-24} = ld.Value;
+  let Inst{25-24} = LD_INDDSP16.Value;
   let Inst{23-20} = rs;
   let Inst{19-16} = rd;
   let Inst{15-0} = dsp;

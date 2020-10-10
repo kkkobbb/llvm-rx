@@ -231,7 +231,7 @@ def SHLR_RR : RXInst3_OpRsRd<0b1111110101100000, (outs GPR:$rd),
                              [(set GPR:$rd, (srl GPR:$src, GPR:$rs))]>;
 
 // 左回転 reg reg
-def ROTL_RR : RXInst3_OpRsRd<0b1111110101100000, (outs GPR:$rd),
+def ROTL_RR : RXInst3_OpRsRd<0b1111110101100110, (outs GPR:$rd),
                              (ins GPR:$src, GPR:$rs),
                              "rotl $rs, $rd",
                              [(set GPR:$rd, (rotl GPR:$src, GPR:$rs))]>;
@@ -268,40 +268,40 @@ def MOVL_RpR : RXInst2_OpSzLdLdRdRs<SIZE_L, LD_INDIRECT, LD_DIRECT,
 
 // NOTE *extload* 上位ビット拡張ロード
 // displacement load (byte)
-def MOVB_D16R : RXInst4_OpSzLdRsRdD16<SIZE_B, LD_INDDSP16, (outs GPR:$rd),
+def MOVB_D16R : RXInst4_OpSzLdRsRdD16<SIZE_B, (outs GPR:$rd),
                                       (ins GPR:$rs, dsp16:$dsp),
                                       "mov.b $dsp[$rs], $rd",
                                       [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
 def : Pat<(extloadi8 (addr GPR:$rs, dsp16:$dsp)), (MOVB_D16R GPR:$rs, dsp16:$dsp)>;
 
 // displacement load (word)
-def MOVW_D16R : RXInst4_OpSzLdRsRdD16<SIZE_W, LD_INDDSP16, (outs GPR:$rd),
+def MOVW_D16R : RXInst4_OpSzLdRsRdD16<SIZE_W, (outs GPR:$rd),
                                       (ins GPR:$rs, dsp16:$dsp),
                                       "mov.w $dsp[$rs], $rd",
                                       [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
 def : Pat<(extloadi16 (addr GPR:$rs, dsp16:$dsp)), (MOVW_D16R GPR:$rs, dsp16:$dsp)>;
 
 // displacement load (long)
-def MOVL_D16R : RXInst4_OpSzLdRsRdD16<SIZE_L, LD_INDDSP16, (outs GPR:$rd),
+def MOVL_D16R : RXInst4_OpSzLdRsRdD16<SIZE_L, (outs GPR:$rd),
                                       (ins GPR:$rs, dsp16:$dsp),
                                       "mov.l $dsp[$rs], $rd",
                                       [(set GPR:$rd, (load (addr GPR:$rs, dsp16:$dsp)))]>;
 
 // NOTE truncstore* 上位ビット切り捨てストア
 // displacement store (byte)
-def MOVB_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_B, LD_INDDSP16, (outs),
+def MOVB_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_B, (outs),
                                       (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                                       "mov.b $rs, $dsp[$rd]",
                                       [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store (word)
-def MOVW_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_W, LD_INDDSP16, (outs),
+def MOVW_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_W, (outs),
                                       (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                                       "mov.w $rs, $dsp[$rd]",
                                       [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store (long)
-def MOVL_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_L, LD_INDDSP16, (outs),
+def MOVL_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_L, (outs),
                                       (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
                                       "mov.l $rs, $dsp[$rd]",
                                       [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
@@ -323,13 +323,13 @@ def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
                           [(store (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement load unsigned (byte)
-def MOVUB_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_B, LD_INDDSP16, (outs GPR:$rd),
+def MOVUB_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_B, (outs GPR:$rd),
                                       (ins GPR:$rs, dsp16:$dsp),
                                       "movu.b $dsp[$rs], $rd",
                                       [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
 
 // displacement load unsigned (word)
-def MOVUW_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_W, LD_INDDSP16, (outs GPR:$rd),
+def MOVUW_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_W, (outs GPR:$rd),
                                       (ins GPR:$rs, dsp16:$dsp),
                                       "movu.w $dsp[$rs], $rd",
                                       [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
