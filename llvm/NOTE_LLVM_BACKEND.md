@@ -117,9 +117,12 @@
 ## ターゲット固有の実装時メモ
 
 ### ビルドエラー
+* 対応するパターンがない場合、(set reg reg)の命令にマッチすることが多い
 * `llvm::CGIOperandList::getSubOperandNumber(unsigned int) const: Assertion i < OperandList.size() && "Invalid flat operand #"' failed.`
     * tdファイルで、親classで定義した全ての変数に値が設定されていない場合でるっぽい
-* 対応するパターンがない場合、(set reg reg)の命令にマッチすることが多い
+* `virtual llvm::Init* llvm::BitsInit::getBit(unsigned int) const: Assertion Bit < NumBits && "Bit index out of range!"' failed.`
+    * SoftFailフィールドが命令のビット長より短い場合に発生する
+    * `llvm/utils/TableGen/FixedLenDecoderEmitter.cpp insnWithID` あたり参照
 
 ### デバッグ出力追加
 * `#include "llvm/Support/Debug.h"`

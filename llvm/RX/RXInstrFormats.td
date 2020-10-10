@@ -14,6 +14,14 @@ def LD_INDIRECT : RXLd<0b00>;
 def LD_INDDSP8  : RXLd<0b01>;
 def LD_INDDSP16 : RXLd<0b10>;
 
+class RXLi<bits<2> val> {
+  bits<2> Value = val;
+}
+def LI_SIMM8  : RXLi<0b01>;
+def LI_SIMM16 : RXLi<0b10>;
+def LI_SIMM24 : RXLi<0b11>;
+def LI_IMM32  : RXLi<0b00>;
+
 class RXSize<bits<2> val> {
   bits<2> Value = val;
 }
@@ -58,7 +66,8 @@ class RXInst<dag outs, dag ins, string asmstr, list<dag> pattern>
   let AsmString = asmstr;
   let Pattern = pattern;
 
-  field bits<32> SoftFail = 0;
+  // ビット長は命令長の最大以上であればいいっぽい
+  field bits<64> SoftFail = 0;
 }
 
 class RXInstPseudo<dag outs, dag ins, string asmstr, list<dag> pattern>
@@ -302,11 +311,83 @@ class RXInst5<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 5;
 }
 
+class I5_OpLdRdLiSzD16I8<bits<6> opcode, RXSize size, dag outs, dag ins,
+                         string asmstr, list<dag> pattern>
+    : RXInst5<outs, ins, asmstr, pattern> {
+  field bits<4> rd;
+  field bits<16> dsp;
+  field bits<8> imm;
+
+  let Inst{39-34} = opcode;
+  let Inst{33-32} = LD_INDDSP16.Value;
+  let Inst{31-28} = rd;
+  let Inst{27-26} = LI_SIMM8.Value;
+  let Inst{25-24} = size.Value;
+  let Inst{23-8} = dsp;
+  let Inst{7-0} = imm;
+}
+
 // 6byte format
 class RXInst6<dag outs, dag ins, string asmstr, list<dag> pattern>
     : RXInst<outs, ins, asmstr, pattern> {
   field bits<48> Inst;
   let Size = 6;
+}
+
+class I6_OpLiRsRdI32<bits<6> opcode, dag outs, dag ins, string asmstr,
+                     list<dag> pattern>
+    : RXInst6<outs, ins, asmstr, pattern> {
+  field bits<4> rs;
+  field bits<4> rd;
+  field bits<32> imm;
+
+  let Inst{47-42} = opcode;
+  let Inst{41-40} = LI_IMM32.Value;
+  let Inst{39-36} = rs;
+  let Inst{35-32} = rd;
+  let Inst{31-0} = imm;
+}
+
+class I6_OpRdLiI32<bits<8> opcode, dag outs, dag ins, string asmstr,
+                   list<dag> pattern>
+    : RXInst6<outs, ins, asmstr, pattern> {
+  field bits<4> rd;
+  field bits<32> imm;
+
+  let Inst{47-40} = opcode;
+  let Inst{39-36} = rd;
+  let Inst{35-34} = LI_IMM32.Value;
+  let Inst{33-32} = 0b10;
+  let Inst{31-0} = imm;
+}
+
+class I6_OpLdRdLiSzD16I16<bits<6> opcode, RXSize size, dag outs, dag ins,
+                          string asmstr, list<dag> pattern>
+    : RXInst6<outs, ins, asmstr, pattern> {
+  field bits<4> rd;
+  field bits<16> dsp;
+  field bits<16> imm;
+
+  let Inst{47-42} = opcode;
+  let Inst{41-40} = LD_INDDSP16.Value;
+  let Inst{39-36} = rd;
+  let Inst{35-34} = LI_SIMM16.Value;
+  let Inst{33-32} = size.Value;
+  let Inst{31-16} = dsp;
+  let Inst{15-0} = imm;
+}
+
+class I6_OpLiRsI32<bits<6> opcode, dag outs, dag ins, string asmstr,
+                   list<dag> pattern>
+    : RXInst6<outs, ins, asmstr, pattern> {
+  field bits<4> rs;
+  field bits<32> imm;
+
+  let Inst{47-42} = opcode;
+  let Inst{41-40} = LI_IMM32.Value;
+  let Inst{39-36} = 0b0000;
+  let Inst{35-32} = rs;
+  let Inst{31-0} = imm;
 }
 
 // 7byte format

@@ -59,6 +59,10 @@ def dsp16 : Operand<i32>,
 // 5bit即値
 def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
 
+def imm8 : Operand<i32>, ImmLeaf<i32, [{return isInt<8>(Imm);}]>;
+
+def imm16 : Operand<i32>, ImmLeaf<i32, [{return isInt<16>(Imm);}]>;
+
 // reg or imm
 def GPRIMM : Operand<i32>;
 
@@ -103,9 +107,9 @@ let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def RTS : I1_Op<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
 
 // 加算 i32 reg reg
-def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
-                        "add #$imm, $rs, $rd",
-                        [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
+def ADD_I32RR : I6_OpLiRsRdI32<0b011100, (outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
+                               "add #$imm, $rs, $rd",
+                               [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
 
 // 加算 reg reg reg
 def ADD_RRR : I3_OpRdRsRs<0b111111110010, (outs GPR:$rd),
@@ -244,9 +248,9 @@ def ROTR_RR : I3_OpRsRd<0b1111110101100100, (outs GPR:$rd),
 }
 
 // move i32 reg
-def MOV_I32R : RXInst6<(outs GPR:$rd), (ins i32imm:$imm),
-                       "mov #$imm, $rd",
-                       [(set GPR:$rd, imm:$imm)]>;
+def MOV_I32R : I6_OpRdLiI32<0b11111011, (outs GPR:$rd), (ins i32imm:$imm),
+                            "mov #$imm, $rd",
+                            [(set GPR:$rd, imm:$imm)]>;
 
 // move reg reg (long)
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
@@ -307,15 +311,16 @@ def MOVL_RD16 : I4_OpSzLdRdRsD16<SIZE_L, (outs),
                                  [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store i8
-// insにi32immがあるが、asm変換時に上位ビットを切り捨てて8bitにする
-def MOVB_I8D16 : RXInst6<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
-                         "mov.b #${imm}:8, $dsp[$rd]",
-                         [(truncstorei8 (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVB_I8D16 : I5_OpLdRdLiSzD16I8<0b111110, SIZE_B, (outs),
+                                    (ins imm8:$imm, GPR:$rd, dsp16:$dsp),
+                                    "mov.b #${imm}:8, $dsp[$rd]",
+                                    [(truncstorei8 (i32 imm8:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store i16
-def MOVW_I16D16 : RXInst6<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
-                          "mov.w #${imm}:16, $dsp[$rd]",
-                          [(truncstorei16 (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVW_I16D16 : I6_OpLdRdLiSzD16I16<0b111110, SIZE_W, (outs),
+                                      (ins imm16:$imm, GPR:$rd, dsp16:$dsp),
+                                      "mov.w #${imm}:16, $dsp[$rd]",
+                                      [(truncstorei16 (i32 imm16:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store i32
 def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
@@ -357,8 +362,8 @@ def CMP_RR : I2_OpLdRsRs<0b010001, LD_DIRECT,
 def CMP_UI4R : I2_OpUi4Rs<0b01100001, (outs), (ins i32imm:$imm, GPR:$rs),
                           "cmp #$imm, $rs", []>;
 
-def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
-                       "cmp #$imm, $rs", []>;
+def CMP_I32R : I6_OpLiRsI32<0b011101, (outs), (ins i32imm:$imm, GPR:$rs),
+                            "cmp #$imm, $rs", []>;
 }
 
 // 相対条件分岐
