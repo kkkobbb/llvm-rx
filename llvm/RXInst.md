@@ -47,5 +47,45 @@ CMP_RR    010001 ld rs1= rs2=
 CMP_UI4R  01100001 imm= rs2=
 ```
 
+### RXInst2_OpCdDsp
+```
+B---       0010 cd== pcdsp===
+```
 
 
+## 3byte
+
+### RXInst3_OpRdRsRs
+```
+ADD_RRR    111111110010 rd== rs== rs2=
+SUB_RRR    111111110000 rd== rs== rs2=
+MUL_RRR    111111110011 rd== rs== rs2=
+AND_RRR    111111110100 rd== rs== rs2=
+OR_RRR     111111110101 rd== rs== rs2=
+```
+
+### RXInst3_OpLdRsRd
+```
+DIV_RR     11111100001000 ld rs== rd==
+DIVU_RR    11111100001001 ld rs== rd==
+ABS_RR     11111100000011 ld rs== rd== (ld=11 only)
+MAX_RR     11111100000100 ld rs== rd==
+MIN_RR     11111100000101 ld rs== rd==
+XOR_RR     11111100001101 ld rs== rd==
+```
+
+### RXInst3_OpI5RsRd
+```
+SHAR_I5RR  11111101101 imm== rs2= rd==
+SHLL_I5RR  11111101110 imm== rs2= rd==
+SHLR_I5RR  11111101100 imm== rs2= rd==
+```
+
+### RXInst3_OpRsRd
+```
+SHAR_RR    1111110101100001 rs== rd==
+SHLL_RR    1111110101100010 rs== rd==
+SHLR_RR    1111110101100000 rs== rd==
+ROTL_RR    1111110101100110 rs== rd==
+ROTR_RR    1111110101100100 rs== rd==
+```

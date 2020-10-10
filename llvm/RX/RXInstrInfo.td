@@ -107,19 +107,22 @@ def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
                         [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
 
 // 加算 reg reg reg
-def ADD_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                      "add $rs, $rs2, $rd",
-                      [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
+def ADD_RRR : RXInst3_OpRdRsRs<0b111111110010, (outs GPR:$rd),
+                               (ins GPR:$rs, GPR:$rs2),
+                               "add $rs, $rs2, $rd",
+                               [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // 減算 reg reg reg
-def SUB_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                      "sub $rs, $rs2, $rd",
-                      [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
+def SUB_RRR : RXInst3_OpRdRsRs<0b111111110000, (outs GPR:$rd),
+                               (ins GPR:$rs, GPR:$rs2),
+                               "sub $rs, $rs2, $rd",
+                               [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
 
 // 乗算 reg reg reg
-def MUL_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                      "mul $rs, $rs2, $rd",
-                      [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
+def MUL_RRR : RXInst3_OpRdRsRs<0b111111110011, (outs GPR:$rd),
+                               (ins GPR:$rs, GPR:$rs2),
+                               "mul $rs, $rs2, $rd",
+                               [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
 
 // 符号付き乗算 2つの32bitレジスタに結果を格納する
 //
@@ -138,89 +141,105 @@ def EMUL_RR : RXInst7<(outs GPR64_lo:$rd, GPR64_hi:$rd2), (ins GPR64_lo:$src, i3
 
 // 符号付き除算 reg reg
 let Constraints = "$rd = $src" in
-def DIV_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                     "div $rs, $rd",
-                     [(set GPR:$rd, (sdiv GPR:$src, GPR:$rs))]>;
+def DIV_RR : RXInst3_OpLdRsRd<0b11111100001000, LD_DIRECT, (outs GPR:$rd),
+                              (ins GPR:$src, GPR:$rs),
+                              "div $rs, $rd",
+                              [(set GPR:$rd, (sdiv GPR:$src, GPR:$rs))]>;
 
 // 符号なし除算 reg reg
 let Constraints = "$rd = $src" in
-def DIVU_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                      "divu $rs, $rd",
-                      [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
+def DIVU_RR : RXInst3_OpLdRsRd<0b11111100001001, LD_DIRECT, (outs GPR:$rd),
+                               (ins GPR:$src, GPR:$rs),
+                               "divu $rs, $rd",
+                               [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
 
 // 絶対値 reg reg
-def ABS_RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs),
-                     "abs $rs, $rd",
-                     [(set GPR:$rd, (abs GPR:$rs))]>;
+def ABS_RR : RXInst3_OpLdRsRd<0b11111100000011, LD_DIRECT, (outs GPR:$rd),
+                              (ins GPR:$rs),
+                              "abs $rs, $rd",
+                              [(set GPR:$rd, (abs GPR:$rs))]>;
 
 let Constraints = "$rd = $src" in {
 // 最大値選択 reg reg
-def MAX_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                     "max $rs, $rd",
-                     [(set GPR:$rd, (smax GPR:$src, GPR:$rs))]>;
+def MAX_RR : RXInst3_OpLdRsRd<0b11111100000100, LD_DIRECT, (outs GPR:$rd),
+                              (ins GPR:$src, GPR:$rs),
+                              "max $rs, $rd",
+                              [(set GPR:$rd, (smax GPR:$src, GPR:$rs))]>;
 
 // 最小値選択 reg reg
-def MIN_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                     "min $rs, $rd",
-                     [(set GPR:$rd, (smin GPR:$src, GPR:$rs))]>;
+def MIN_RR : RXInst3_OpLdRsRd<0b11111100000101, LD_DIRECT, (outs GPR:$rd),
+                              (ins GPR:$src, GPR:$rs),
+                              "min $rs, $rd",
+                              [(set GPR:$rd, (smin GPR:$src, GPR:$rs))]>;
 }
 
 // AND reg reg reg
-def AND_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                      "and $rs, $rs2, $rd",
-                      [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
+def AND_RRR : RXInst3_OpRdRsRs<0b111111110100, (outs GPR:$rd),
+                               (ins GPR:$rs, GPR:$rs2),
+                               "and $rs, $rs2, $rd",
+                               [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
 
 // OR reg reg reg
-def OR_RRR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, GPR:$rs2),
-                     "or $rs, $rs2, $rd",
-                     [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
+def OR_RRR : RXInst3_OpRdRsRs<0b111111110101, (outs GPR:$rd),
+                              (ins GPR:$rs, GPR:$rs2),
+                              "or $rs, $rs2, $rd",
+                              [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
 
 // XOR reg reg
 let Constraints = "$rd = $src" in
-def XOR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                     "xor $rs, $rd",
-                     [(set GPR:$rd, (xor GPR:$src, GPR:$rs))]>;
+def XOR_RR : RXInst3_OpLdRsRd<0b11111100001101, LD_DIRECT, (outs GPR:$rd),
+                              (ins GPR:$src, GPR:$rs),
+                              "xor $rs, $rd",
+                              [(set GPR:$rd, (xor GPR:$src, GPR:$rs))]>;
 
 // 算術右シフト u5 reg reg
-def SHAR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
-                        "shar #$imm, $rs, $rd",
-                        [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
+def SHAR_I5RR : RXInst3_OpI5RsRd<0b11111101101, (outs GPR:$rd),
+                                 (ins GPR:$rs, uimm5:$imm),
+                                 "shar #$imm, $rs, $rd",
+                                 [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
 
 // 論理算術左シフト u5 reg reg
-def SHLL_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
-                        "shll #$imm, $rs, $rd",
-                        [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
+def SHLL_I5RR : RXInst3_OpI5RsRd<0b11111101110, (outs GPR:$rd), 
+                                 (ins GPR:$rs, uimm5:$imm),
+                                 "shll #$imm, $rs, $rd",
+                                 [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
 
 // 論理右シフト u5 reg reg
-def SHLR_I5RR : RXInst3<(outs GPR:$rd), (ins GPR:$rs, uimm5:$imm),
-                        "shlr #$imm, $rs, $rd",
-                        [(set GPR:$rd, (srl GPR:$rs, uimm5:$imm))]>;
+def SHLR_I5RR : RXInst3_OpI5RsRd<0b11111101100, (outs GPR:$rd), 
+                                 (ins GPR:$rs, uimm5:$imm),
+                                 "shlr #$imm, $rs, $rd",
+                                 [(set GPR:$rd, (srl GPR:$rs, uimm5:$imm))]>;
 
 let Constraints = "$rd = $src" in {
 // 算術右シフト reg reg
-def SHAR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                      "shar $rs, $rd",
-                      [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
+def SHAR_RR : RXInst3_OpRsRd<0b1111110101100001, (outs GPR:$rd),
+                             (ins GPR:$src, GPR:$rs),
+                             "shar $rs, $rd",
+                             [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
 
 // 論理算術左シフト reg reg
-def SHLL_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                      "shll $rs, $rd",
-                      [(set GPR:$rd, (shl GPR:$src, GPR:$rs))]>;
+def SHLL_RR : RXInst3_OpRsRd<0b1111110101100010, (outs GPR:$rd),
+                             (ins GPR:$src, GPR:$rs),
+                             "shll $rs, $rd",
+                             [(set GPR:$rd, (shl GPR:$src, GPR:$rs))]>;
 
 // 論理右シフト reg reg
-def SHLR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                      "shlr $rs, $rd",
-                      [(set GPR:$rd, (srl GPR:$src, GPR:$rs))]>;
+def SHLR_RR : RXInst3_OpRsRd<0b1111110101100000, (outs GPR:$rd), 
+                             (ins GPR:$src, GPR:$rs),
+                             "shlr $rs, $rd",
+                             [(set GPR:$rd, (srl GPR:$src, GPR:$rs))]>;
 
 // 左回転 reg reg
-def ROTL_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                      "rotl $rs, $rd",
-                      [(set GPR:$rd, (rotl GPR:$src, GPR:$rs))]>;
+def ROTL_RR : RXInst3_OpRsRd<0b1111110101100000, (outs GPR:$rd),
+                             (ins GPR:$src, GPR:$rs),
+                             "rotl $rs, $rd",
+                             [(set GPR:$rd, (rotl GPR:$src, GPR:$rs))]>;
 
 // 右回転 reg reg
-def ROTR_RR : RXInst3<(outs GPR:$rd), (ins GPR:$src, GPR:$rs),
-                      "rotr $rs, $rd",
-                      [(set GPR:$rd, (rotr GPR:$src, GPR:$rs))]>;
+def ROTR_RR : RXInst3_OpRsRd<0b1111110101100100, (outs GPR:$rd),
+                             (ins GPR:$src, GPR:$rs),
+                             "rotr $rs, $rd",
+                             [(set GPR:$rd, (rotr GPR:$src, GPR:$rs))]>;
 }
 
 // move i32 reg

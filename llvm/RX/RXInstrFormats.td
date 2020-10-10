@@ -177,6 +177,55 @@ class RXInst3<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 3;
 }
 
+class RXInst3_OpRdRsRs<bits<12> opcode, dag outs, dag ins, string asmstr,
+                       list<dag> pattern>
+    : RXInst3<outs, ins, asmstr, pattern> {
+  bits<4> rd;
+  bits<4> rs;
+  bits<4> rs2;
+
+  let Inst{23-12} = opcode;
+  let Inst{11-8} = rd;
+  let Inst{7-4} = rs;
+  let Inst{3-0} = rs2;
+}
+
+class RXInst3_OpLdRsRd<bits<14> opcode, RXLd ld, dag outs, dag ins,
+                       string asmstr, list<dag> pattern>
+    : RXInst3<outs, ins, asmstr, pattern> {
+  bits<4> rs;
+  bits<4> rd;
+
+  let Inst{23-10} = opcode;
+  let Inst{9-8} = ld.Value;
+  let Inst{7-4} = rs;
+  let Inst{3-0} = rd;
+}
+
+class RXInst3_OpI5RsRd<bits<11> opcode, dag outs, dag ins, string asmstr,
+                       list<dag> pattern>
+    : RXInst3<outs, ins, asmstr, pattern> {
+  bits<5> imm;
+  bits<4> rs;
+  bits<4> rd;
+
+  let Inst{23-13} = opcode;
+  let Inst{12-8} = imm;
+  let Inst{7-4} = rs;
+  let Inst{3-0} = rd;
+}
+
+class RXInst3_OpRsRd<bits<16> opcode, dag outs, dag ins, string asmstr,
+                       list<dag> pattern>
+    : RXInst3<outs, ins, asmstr, pattern> {
+  bits<4> rs;
+  bits<4> rd;
+
+  let Inst{23-8} = opcode;
+  let Inst{7-4} = rs;
+  let Inst{3-0} = rd;
+}
+
 // 4byte format
 class RXInst4<dag outs, dag ins, string asmstr, list<dag> pattern>
     : RXInst<outs, ins, asmstr, pattern> {
