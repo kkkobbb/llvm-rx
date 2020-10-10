@@ -40,10 +40,12 @@ def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_CallSeqEnd,
 //===----------------------------------------------------------------------===//
 
 // アドレス (bsr用)
-def bsrtarget : Operand<iPTR>;
+def pcdsp24_ptr : Operand<iPTR>;
 
-// アドレス (BasicBlock用)
-def brtarget : Operand<OtherVT>;
+// 8bit相対アドレス (BasicBlock用) (-128 <= pcdsp8 <= 127)
+def pcdsp8 : Operand<OtherVT>;
+// 24bit相対アドレス (BasicBlock用)
+def pcdsp24 : Operand<OtherVT>;
 
 // 2オペランドで表現されるアドレス ノード
 def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
@@ -56,11 +58,11 @@ def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
 def dsp16 : Operand<i32>,
             ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]>;
 
-// 5bit即値
+// 5bit unsigned即値
 def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
-
+// 8bit signed即値
 def imm8 : Operand<i32>, ImmLeaf<i32, [{return isInt<8>(Imm);}]>;
-
+// 16bit signed即値
 def imm16 : Operand<i32>, ImmLeaf<i32, [{return isInt<16>(Imm);}]>;
 
 // reg or imm
@@ -85,8 +87,8 @@ def NOP : I1_Op<0b00000011, (outs), (ins), "nop", []>;
 
 // 相対サブルーチン分岐 pcdsp:24
 let isCall = 1 in
-def BSRA : I4_OpPcdsp<0b00000101, (outs), (ins bsrtarget:$pcdsp),
-                      "bsr $pcdsp", []>;
+def BSRA : I4_OpD24<0b00000101, (outs), (ins pcdsp24_ptr:$pcdsp),
+                    "bsr $pcdsp", []>;
 def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSRA tglobaladdr:$addr)>;
 def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 
@@ -370,11 +372,10 @@ def CMP_I32R : I6_OpLiRsI32<0b011101, (outs), (ins i32imm:$imm, GPR:$rs),
 }
 
 // 相対条件分岐
-// 分岐先は-128 <= pcdsp <= 127
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
 class Branch_B<RXCd cd, string asmstr>
-    : I2_OpCdDsp<cd, (outs), (ins brtarget:$dsp),
+    : I2_OpCdDsp<cd, (outs), (ins pcdsp8:$dsp),
                  !strconcat(asmstr, " $dsp"), []>;
 def BEQ  : Branch_B<CD_BEQ, "beq">;    // ==
 def BNE  : Branch_B<CD_BNE, "bne">;    // !=
@@ -392,8 +393,8 @@ def BLTU : Branch_B<CD_BLTU, "bltu">;  // >
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
 class BranchPseudo<PatFrag Cond>
-    : RXInstPseudo<(outs), (ins GPRIMM:$lhs, GPR:$rhs, brtarget:$target),
-                   "", [(brcond (i32 (Cond i32:$lhs, GPR:$rhs)), bb:$target)]>;
+    : RXInstPseudo<(outs), (ins GPRIMM:$lhs, GPR:$rhs, pcdsp8:$dsp),
+                   "", [(brcond (i32 (Cond i32:$lhs, GPR:$rhs)), bb:$dsp)]>;
 def pBRCOND_EQ  : BranchPseudo<seteq>;
 def pBRCOND_NE  : BranchPseudo<setne>;
 def pBRCOND_LT  : BranchPseudo<setlt>;
@@ -410,7 +411,7 @@ def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>
 // 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス
 let isBranch = 1, isTerminator = 1, isBarrier = 1 in
-def BRA : I2_OpRs<0b011111110100, (outs), (ins brtarget:$rs),
+def BRA : I2_OpRs<0b011111110100, (outs), (ins pcdsp24:$rs),
                   "bra $rs", [(br bb:$rs)]>;
 
 

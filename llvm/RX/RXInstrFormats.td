@@ -248,7 +248,7 @@ class RXInst4<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 4;
 }
 
-class I4_OpPcdsp<bits<8> opcode, dag outs, dag ins, string asmstr,
+class I4_OpD24<bits<8> opcode, dag outs, dag ins, string asmstr,
                       list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<24> pcdsp;
