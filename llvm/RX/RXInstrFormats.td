@@ -74,7 +74,7 @@ class RXInst1<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 1;
 }
 
-class RXInst1_Op<bits<8> opcode, dag outs, dag ins, string asmstr,
+class I1_Op<bits<8> opcode, dag outs, dag ins, string asmstr,
                  list<dag> pattern>
     : RXInst1<outs, ins, asmstr, pattern> {
   let Inst = opcode;
@@ -87,7 +87,7 @@ class RXInst2<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 2;
 }
 
-class RXInst2_OpRs<bits<12> opcode, dag outs, dag ins, string asmstr,
+class I2_OpRs<bits<12> opcode, dag outs, dag ins, string asmstr,
                    list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -96,7 +96,7 @@ class RXInst2_OpRs<bits<12> opcode, dag outs, dag ins, string asmstr,
   let Inst{3-0} = rs;
 }
 
-class RXInst2_OpRd<bits<12> opcode, dag outs, dag ins, string asmstr,
+class I2_OpRd<bits<12> opcode, dag outs, dag ins, string asmstr,
                    list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rd;
@@ -105,7 +105,7 @@ class RXInst2_OpRd<bits<12> opcode, dag outs, dag ins, string asmstr,
   let Inst{3-0} = rd;
 }
 
-class RXInst2_OpSzLdLdRsRd<RXSize size, RXLd ld1, RXLd ld2, dag outs, dag ins,
+class I2_OpSzLdLdRsRd<RXSize size, RXLd ld1, RXLd ld2, dag outs, dag ins,
                            string asmstr, list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -119,7 +119,7 @@ class RXInst2_OpSzLdLdRsRd<RXSize size, RXLd ld1, RXLd ld2, dag outs, dag ins,
   let Inst{3-0} = rd;
 }
 
-class RXInst2_OpSzLdLdRdRs<RXSize size, RXLd ld1, RXLd ld2, dag outs, dag ins,
+class I2_OpSzLdLdRdRs<RXSize size, RXLd ld1, RXLd ld2, dag outs, dag ins,
                            string asmstr, list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -133,7 +133,7 @@ class RXInst2_OpSzLdLdRdRs<RXSize size, RXLd ld1, RXLd ld2, dag outs, dag ins,
   let Inst{3-0} = rs;
 }
 
-class RXInst2_OpSzRs<bits<10> opcode, RXSize size, dag outs, dag ins,
+class I2_OpSzRs<bits<10> opcode, RXSize size, dag outs, dag ins,
                      string asmstr, list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -143,7 +143,7 @@ class RXInst2_OpSzRs<bits<10> opcode, RXSize size, dag outs, dag ins,
   let Inst{3-0} = rs;
 }
 
-class RXInst2_OpLdRsRs<bits<6> opcode, RXLd ld, dag outs, dag ins,
+class I2_OpLdRsRs<bits<6> opcode, RXLd ld, dag outs, dag ins,
                      string asmstr, list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rs1;
@@ -155,7 +155,7 @@ class RXInst2_OpLdRsRs<bits<6> opcode, RXLd ld, dag outs, dag ins,
   let Inst{3-0} = rs2;
 }
 
-class RXInst2_OpUi4Rs<bits<8> opcode, dag outs, dag ins,
+class I2_OpUi4Rs<bits<8> opcode, dag outs, dag ins,
                      string asmstr, list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -166,7 +166,7 @@ class RXInst2_OpUi4Rs<bits<8> opcode, dag outs, dag ins,
   let Inst{3-0} = rs;
 }
 
-class RXInst2_OpCdDsp<RXCd cd, dag outs, dag ins, string asmstr,
+class I2_OpCdDsp<RXCd cd, dag outs, dag ins, string asmstr,
                       list<dag> pattern>
     : RXInst2<outs, ins, asmstr, pattern> {
   bits<8> dsp;
@@ -183,7 +183,7 @@ class RXInst3<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 3;
 }
 
-class RXInst3_OpRdRsRs<bits<12> opcode, dag outs, dag ins, string asmstr,
+class I3_OpRdRsRs<bits<12> opcode, dag outs, dag ins, string asmstr,
                        list<dag> pattern>
     : RXInst3<outs, ins, asmstr, pattern> {
   bits<4> rd;
@@ -196,7 +196,7 @@ class RXInst3_OpRdRsRs<bits<12> opcode, dag outs, dag ins, string asmstr,
   let Inst{3-0} = rs2;
 }
 
-class RXInst3_OpLdRsRd<bits<14> opcode, RXLd ld, dag outs, dag ins,
+class I3_OpLdRsRd<bits<14> opcode, RXLd ld, dag outs, dag ins,
                        string asmstr, list<dag> pattern>
     : RXInst3<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -208,7 +208,7 @@ class RXInst3_OpLdRsRd<bits<14> opcode, RXLd ld, dag outs, dag ins,
   let Inst{3-0} = rd;
 }
 
-class RXInst3_OpI5RsRd<bits<11> opcode, dag outs, dag ins, string asmstr,
+class I3_OpI5RsRd<bits<11> opcode, dag outs, dag ins, string asmstr,
                        list<dag> pattern>
     : RXInst3<outs, ins, asmstr, pattern> {
   bits<5> imm;
@@ -221,7 +221,7 @@ class RXInst3_OpI5RsRd<bits<11> opcode, dag outs, dag ins, string asmstr,
   let Inst{3-0} = rd;
 }
 
-class RXInst3_OpRsRd<bits<16> opcode, dag outs, dag ins, string asmstr,
+class I3_OpRsRd<bits<16> opcode, dag outs, dag ins, string asmstr,
                        list<dag> pattern>
     : RXInst3<outs, ins, asmstr, pattern> {
   bits<4> rs;
@@ -239,7 +239,7 @@ class RXInst4<dag outs, dag ins, string asmstr, list<dag> pattern>
   let Size = 4;
 }
 
-class RXInst4_OpPcdsp<bits<8> opcode, dag outs, dag ins, string asmstr,
+class I4_OpPcdsp<bits<8> opcode, dag outs, dag ins, string asmstr,
                       list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<24> pcdsp;
@@ -248,7 +248,7 @@ class RXInst4_OpPcdsp<bits<8> opcode, dag outs, dag ins, string asmstr,
   let Inst{23-0} = pcdsp;
 }
 
-class RXInst4_OpSzLdRsRdD16<RXSize size, dag outs, dag ins,
+class I4_OpSzLdRsRdD16<RXSize size, dag outs, dag ins,
                             string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<4> rs;
@@ -264,7 +264,7 @@ class RXInst4_OpSzLdRsRdD16<RXSize size, dag outs, dag ins,
   let Inst{15-0} = dsp;
 }
 
-class RXInst4_OpSzLdRdRsD16<RXSize size, dag outs, dag ins,
+class I4_OpSzLdRdRsD16<RXSize size, dag outs, dag ins,
                             string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<4> rd;
@@ -280,7 +280,7 @@ class RXInst4_OpSzLdRdRsD16<RXSize size, dag outs, dag ins,
   let Inst{15-0} = dsp;
 }
 
-class RXInst4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, dag outs, dag ins,
+class I4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, dag outs, dag ins,
                            string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
   field bits<4> rs;

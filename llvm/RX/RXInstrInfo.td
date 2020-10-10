@@ -77,12 +77,12 @@ include "RXInstrFormats.td"
 // NOTE パターンに現れるsetはノードではなく出力レジスタを表現するための記述のため、Pat<>には記述する必要がない(できない?)
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def NOP : RXInst1_Op<0b00000011, (outs), (ins), "nop", []>;
+def NOP : I1_Op<0b00000011, (outs), (ins), "nop", []>;
 
 // 相対サブルーチン分岐 pcdsp:24
 let isCall = 1 in
-def BSRA : RXInst4_OpPcdsp<0b00000101, (outs), (ins bsrtarget:$pcdsp),
-                           "bsr $pcdsp", []>;
+def BSRA : I4_OpPcdsp<0b00000101, (outs), (ins bsrtarget:$pcdsp),
+                      "bsr $pcdsp", []>;
 def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSRA tglobaladdr:$addr)>;
 def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 
@@ -91,8 +91,8 @@ def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 // なので、関数ポインタ、グローバル変数を使用するとPIC不可
 // TODO レジスタに相対アドレスを格納できればBSR命令を使用する
 let isCall = 1 in
-def JSR : RXInst2_OpRs<0b011111110001, (outs), (ins GPR:$rs), "jsr $rs",
-                       [(RXBsr GPR:$rs)]>;
+def JSR : I2_OpRs<0b011111110001, (outs), (ins GPR:$rs), "jsr $rs",
+                  [(RXBsr GPR:$rs)]>;
 
 
 // サブルーチンからの復帰
@@ -100,7 +100,7 @@ def JSR : RXInst2_OpRs<0b011111110001, (outs), (ins GPR:$rs), "jsr $rs",
 // NOTE isTerminator BasicBlockを終了させる可能性がある場合、真
 // NOTE llvm/include/llvm/MC/MCInstrDesc.h
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
-def RTS : RXInst1_Op<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
+def RTS : I1_Op<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
 
 // 加算 i32 reg reg
 def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
@@ -108,22 +108,22 @@ def ADD_I32RR : RXInst6<(outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
                         [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
 
 // 加算 reg reg reg
-def ADD_RRR : RXInst3_OpRdRsRs<0b111111110010, (outs GPR:$rd),
-                               (ins GPR:$rs, GPR:$rs2),
-                               "add $rs, $rs2, $rd",
-                               [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
+def ADD_RRR : I3_OpRdRsRs<0b111111110010, (outs GPR:$rd),
+                          (ins GPR:$rs, GPR:$rs2),
+                          "add $rs, $rs2, $rd",
+                          [(set GPR:$rd, (add GPR:$rs, GPR:$rs2))]>;
 
 // 減算 reg reg reg
-def SUB_RRR : RXInst3_OpRdRsRs<0b111111110000, (outs GPR:$rd),
-                               (ins GPR:$rs, GPR:$rs2),
-                               "sub $rs, $rs2, $rd",
-                               [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
+def SUB_RRR : I3_OpRdRsRs<0b111111110000, (outs GPR:$rd),
+                          (ins GPR:$rs, GPR:$rs2),
+                          "sub $rs, $rs2, $rd",
+                          [(set GPR:$rd, (sub GPR:$rs2, GPR:$rs))]>;
 
 // 乗算 reg reg reg
-def MUL_RRR : RXInst3_OpRdRsRs<0b111111110011, (outs GPR:$rd),
-                               (ins GPR:$rs, GPR:$rs2),
-                               "mul $rs, $rs2, $rd",
-                               [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
+def MUL_RRR : I3_OpRdRsRs<0b111111110011, (outs GPR:$rd),
+                          (ins GPR:$rs, GPR:$rs2),
+                          "mul $rs, $rs2, $rd",
+                          [(set GPR:$rd, (mul GPR:$rs, GPR:$rs2))]>;
 
 // 符号付き乗算 2つの32bitレジスタに結果を格納する
 //
@@ -142,105 +142,105 @@ def EMUL_RR : RXInst7<(outs GPR64_lo:$rd, GPR64_hi:$rd2), (ins GPR64_lo:$src, i3
 
 // 符号付き除算 reg reg
 let Constraints = "$rd = $src" in
-def DIV_RR : RXInst3_OpLdRsRd<0b11111100001000, LD_DIRECT, (outs GPR:$rd),
-                              (ins GPR:$src, GPR:$rs),
-                              "div $rs, $rd",
-                              [(set GPR:$rd, (sdiv GPR:$src, GPR:$rs))]>;
+def DIV_RR : I3_OpLdRsRd<0b11111100001000, LD_DIRECT, (outs GPR:$rd),
+                         (ins GPR:$src, GPR:$rs),
+                         "div $rs, $rd",
+                         [(set GPR:$rd, (sdiv GPR:$src, GPR:$rs))]>;
 
 // 符号なし除算 reg reg
 let Constraints = "$rd = $src" in
-def DIVU_RR : RXInst3_OpLdRsRd<0b11111100001001, LD_DIRECT, (outs GPR:$rd),
-                               (ins GPR:$src, GPR:$rs),
-                               "divu $rs, $rd",
-                               [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
+def DIVU_RR : I3_OpLdRsRd<0b11111100001001, LD_DIRECT, (outs GPR:$rd),
+                          (ins GPR:$src, GPR:$rs),
+                          "divu $rs, $rd",
+                          [(set GPR:$rd, (udiv GPR:$src, GPR:$rs))]>;
 
 // 絶対値 reg reg
-def ABS_RR : RXInst3_OpLdRsRd<0b11111100000011, LD_DIRECT, (outs GPR:$rd),
-                              (ins GPR:$rs),
-                              "abs $rs, $rd",
-                              [(set GPR:$rd, (abs GPR:$rs))]>;
+def ABS_RR : I3_OpLdRsRd<0b11111100000011, LD_DIRECT, (outs GPR:$rd),
+                         (ins GPR:$rs),
+                         "abs $rs, $rd",
+                         [(set GPR:$rd, (abs GPR:$rs))]>;
 
 let Constraints = "$rd = $src" in {
 // 最大値選択 reg reg
-def MAX_RR : RXInst3_OpLdRsRd<0b11111100000100, LD_DIRECT, (outs GPR:$rd),
-                              (ins GPR:$src, GPR:$rs),
-                              "max $rs, $rd",
-                              [(set GPR:$rd, (smax GPR:$src, GPR:$rs))]>;
+def MAX_RR : I3_OpLdRsRd<0b11111100000100, LD_DIRECT, (outs GPR:$rd),
+                         (ins GPR:$src, GPR:$rs),
+                         "max $rs, $rd",
+                         [(set GPR:$rd, (smax GPR:$src, GPR:$rs))]>;
 
 // 最小値選択 reg reg
-def MIN_RR : RXInst3_OpLdRsRd<0b11111100000101, LD_DIRECT, (outs GPR:$rd),
-                              (ins GPR:$src, GPR:$rs),
-                              "min $rs, $rd",
-                              [(set GPR:$rd, (smin GPR:$src, GPR:$rs))]>;
+def MIN_RR : I3_OpLdRsRd<0b11111100000101, LD_DIRECT, (outs GPR:$rd),
+                         (ins GPR:$src, GPR:$rs),
+                         "min $rs, $rd",
+                         [(set GPR:$rd, (smin GPR:$src, GPR:$rs))]>;
 }
 
 // AND reg reg reg
-def AND_RRR : RXInst3_OpRdRsRs<0b111111110100, (outs GPR:$rd),
-                               (ins GPR:$rs, GPR:$rs2),
-                               "and $rs, $rs2, $rd",
-                               [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
+def AND_RRR : I3_OpRdRsRs<0b111111110100, (outs GPR:$rd),
+                          (ins GPR:$rs, GPR:$rs2),
+                          "and $rs, $rs2, $rd",
+                          [(set GPR:$rd, (and GPR:$rs2, GPR:$rs))]>;
 
 // OR reg reg reg
-def OR_RRR : RXInst3_OpRdRsRs<0b111111110101, (outs GPR:$rd),
-                              (ins GPR:$rs, GPR:$rs2),
-                              "or $rs, $rs2, $rd",
-                              [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
+def OR_RRR : I3_OpRdRsRs<0b111111110101, (outs GPR:$rd),
+                         (ins GPR:$rs, GPR:$rs2),
+                         "or $rs, $rs2, $rd",
+                         [(set GPR:$rd, (or GPR:$rs2, GPR:$rs))]>;
 
 // XOR reg reg
 let Constraints = "$rd = $src" in
-def XOR_RR : RXInst3_OpLdRsRd<0b11111100001101, LD_DIRECT, (outs GPR:$rd),
-                              (ins GPR:$src, GPR:$rs),
-                              "xor $rs, $rd",
-                              [(set GPR:$rd, (xor GPR:$src, GPR:$rs))]>;
+def XOR_RR : I3_OpLdRsRd<0b11111100001101, LD_DIRECT, (outs GPR:$rd),
+                         (ins GPR:$src, GPR:$rs),
+                         "xor $rs, $rd",
+                         [(set GPR:$rd, (xor GPR:$src, GPR:$rs))]>;
 
 // 算術右シフト u5 reg reg
-def SHAR_I5RR : RXInst3_OpI5RsRd<0b11111101101, (outs GPR:$rd),
-                                 (ins GPR:$rs, uimm5:$imm),
-                                 "shar #$imm, $rs, $rd",
-                                 [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
+def SHAR_I5RR : I3_OpI5RsRd<0b11111101101, (outs GPR:$rd),
+                            (ins GPR:$rs, uimm5:$imm),
+                            "shar #$imm, $rs, $rd",
+                            [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
 
 // 論理算術左シフト u5 reg reg
-def SHLL_I5RR : RXInst3_OpI5RsRd<0b11111101110, (outs GPR:$rd), 
-                                 (ins GPR:$rs, uimm5:$imm),
-                                 "shll #$imm, $rs, $rd",
-                                 [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
+def SHLL_I5RR : I3_OpI5RsRd<0b11111101110, (outs GPR:$rd),
+                            (ins GPR:$rs, uimm5:$imm),
+                            "shll #$imm, $rs, $rd",
+                            [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
 
 // 論理右シフト u5 reg reg
-def SHLR_I5RR : RXInst3_OpI5RsRd<0b11111101100, (outs GPR:$rd), 
-                                 (ins GPR:$rs, uimm5:$imm),
-                                 "shlr #$imm, $rs, $rd",
-                                 [(set GPR:$rd, (srl GPR:$rs, uimm5:$imm))]>;
+def SHLR_I5RR : I3_OpI5RsRd<0b11111101100, (outs GPR:$rd),
+                            (ins GPR:$rs, uimm5:$imm),
+                            "shlr #$imm, $rs, $rd",
+                            [(set GPR:$rd, (srl GPR:$rs, uimm5:$imm))]>;
 
 let Constraints = "$rd = $src" in {
 // 算術右シフト reg reg
-def SHAR_RR : RXInst3_OpRsRd<0b1111110101100001, (outs GPR:$rd),
-                             (ins GPR:$src, GPR:$rs),
-                             "shar $rs, $rd",
-                             [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
+def SHAR_RR : I3_OpRsRd<0b1111110101100001, (outs GPR:$rd),
+                        (ins GPR:$src, GPR:$rs),
+                        "shar $rs, $rd",
+                        [(set GPR:$rd, (sra GPR:$src, GPR:$rs))]>;
 
 // 論理算術左シフト reg reg
-def SHLL_RR : RXInst3_OpRsRd<0b1111110101100010, (outs GPR:$rd),
-                             (ins GPR:$src, GPR:$rs),
-                             "shll $rs, $rd",
-                             [(set GPR:$rd, (shl GPR:$src, GPR:$rs))]>;
+def SHLL_RR : I3_OpRsRd<0b1111110101100010, (outs GPR:$rd),
+                        (ins GPR:$src, GPR:$rs),
+                        "shll $rs, $rd",
+                        [(set GPR:$rd, (shl GPR:$src, GPR:$rs))]>;
 
 // 論理右シフト reg reg
-def SHLR_RR : RXInst3_OpRsRd<0b1111110101100000, (outs GPR:$rd), 
-                             (ins GPR:$src, GPR:$rs),
-                             "shlr $rs, $rd",
-                             [(set GPR:$rd, (srl GPR:$src, GPR:$rs))]>;
+def SHLR_RR : I3_OpRsRd<0b1111110101100000, (outs GPR:$rd),
+                        (ins GPR:$src, GPR:$rs),
+                        "shlr $rs, $rd",
+                        [(set GPR:$rd, (srl GPR:$src, GPR:$rs))]>;
 
 // 左回転 reg reg
-def ROTL_RR : RXInst3_OpRsRd<0b1111110101100110, (outs GPR:$rd),
-                             (ins GPR:$src, GPR:$rs),
-                             "rotl $rs, $rd",
-                             [(set GPR:$rd, (rotl GPR:$src, GPR:$rs))]>;
+def ROTL_RR : I3_OpRsRd<0b1111110101100110, (outs GPR:$rd),
+                        (ins GPR:$src, GPR:$rs),
+                        "rotl $rs, $rd",
+                        [(set GPR:$rd, (rotl GPR:$src, GPR:$rs))]>;
 
 // 右回転 reg reg
-def ROTR_RR : RXInst3_OpRsRd<0b1111110101100100, (outs GPR:$rd),
-                             (ins GPR:$src, GPR:$rs),
-                             "rotr $rs, $rd",
-                             [(set GPR:$rd, (rotr GPR:$src, GPR:$rs))]>;
+def ROTR_RR : I3_OpRsRd<0b1111110101100100, (outs GPR:$rd),
+                        (ins GPR:$src, GPR:$rs),
+                        "rotr $rs, $rd",
+                        [(set GPR:$rd, (rotr GPR:$src, GPR:$rs))]>;
 }
 
 // move i32 reg
@@ -250,61 +250,61 @@ def MOV_I32R : RXInst6<(outs GPR:$rd), (ins i32imm:$imm),
 
 // move reg reg (long)
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def MOVL_RR : RXInst2_OpSzLdLdRsRd<SIZE_L, LD_DIRECT, LD_DIRECT,
-                                   (outs GPR:$rd), (ins GPR:$rs),
-                                   "mov.l $rs, $rd", []>;
+def MOVL_RR : I2_OpSzLdLdRsRd<SIZE_L, LD_DIRECT, LD_DIRECT,
+                              (outs GPR:$rd), (ins GPR:$rs),
+                              "mov.l $rs, $rd", []>;
 
 // load (long)
-def MOVL_pRR : RXInst2_OpSzLdLdRsRd<SIZE_L, LD_DIRECT, LD_INDIRECT,
-                                    (outs GPR:$rd), (ins GPR:$rs),
-                                    "mov.l [$rs], $rd",
-                                    [(set GPR:$rd, (load GPR:$rs))]>;
+def MOVL_pRR : I2_OpSzLdLdRsRd<SIZE_L, LD_DIRECT, LD_INDIRECT,
+                               (outs GPR:$rd), (ins GPR:$rs),
+                               "mov.l [$rs], $rd",
+                               [(set GPR:$rd, (load GPR:$rs))]>;
 
 // store (long)
-def MOVL_RpR : RXInst2_OpSzLdLdRdRs<SIZE_L, LD_INDIRECT, LD_DIRECT,
-                                    (outs), (ins GPR:$rd, GPR:$rs),
-                                    "mov.l $rs, [$rd]",
-                                    [(store GPR:$rs, GPR:$rd)]>;
+def MOVL_RpR : I2_OpSzLdLdRdRs<SIZE_L, LD_INDIRECT, LD_DIRECT,
+                               (outs), (ins GPR:$rd, GPR:$rs),
+                               "mov.l $rs, [$rd]",
+                               [(store GPR:$rs, GPR:$rd)]>;
 
 // NOTE *extload* 上位ビット拡張ロード
 // displacement load (byte)
-def MOVB_D16R : RXInst4_OpSzLdRsRdD16<SIZE_B, (outs GPR:$rd),
-                                      (ins GPR:$rs, dsp16:$dsp),
-                                      "mov.b $dsp[$rs], $rd",
-                                      [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVB_D16R : I4_OpSzLdRsRdD16<SIZE_B, (outs GPR:$rd),
+                                 (ins GPR:$rs, dsp16:$dsp),
+                                 "mov.b $dsp[$rs], $rd",
+                                 [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
 def : Pat<(extloadi8 (addr GPR:$rs, dsp16:$dsp)), (MOVB_D16R GPR:$rs, dsp16:$dsp)>;
 
 // displacement load (word)
-def MOVW_D16R : RXInst4_OpSzLdRsRdD16<SIZE_W, (outs GPR:$rd),
-                                      (ins GPR:$rs, dsp16:$dsp),
-                                      "mov.w $dsp[$rs], $rd",
-                                      [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVW_D16R : I4_OpSzLdRsRdD16<SIZE_W, (outs GPR:$rd),
+                                 (ins GPR:$rs, dsp16:$dsp),
+                                 "mov.w $dsp[$rs], $rd",
+                                 [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
 def : Pat<(extloadi16 (addr GPR:$rs, dsp16:$dsp)), (MOVW_D16R GPR:$rs, dsp16:$dsp)>;
 
 // displacement load (long)
-def MOVL_D16R : RXInst4_OpSzLdRsRdD16<SIZE_L, (outs GPR:$rd),
-                                      (ins GPR:$rs, dsp16:$dsp),
-                                      "mov.l $dsp[$rs], $rd",
-                                      [(set GPR:$rd, (load (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVL_D16R : I4_OpSzLdRsRdD16<SIZE_L, (outs GPR:$rd),
+                                 (ins GPR:$rs, dsp16:$dsp),
+                                 "mov.l $dsp[$rs], $rd",
+                                 [(set GPR:$rd, (load (addr GPR:$rs, dsp16:$dsp)))]>;
 
 // NOTE truncstore* 上位ビット切り捨てストア
 // displacement store (byte)
-def MOVB_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_B, (outs),
-                                      (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                                      "mov.b $rs, $dsp[$rd]",
-                                      [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVB_RD16 : I4_OpSzLdRdRsD16<SIZE_B, (outs),
+                                 (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                 "mov.b $rs, $dsp[$rd]",
+                                 [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store (word)
-def MOVW_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_W, (outs),
-                                      (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                                      "mov.w $rs, $dsp[$rd]",
-                                      [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVW_RD16 : I4_OpSzLdRdRsD16<SIZE_W, (outs),
+                                 (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                 "mov.w $rs, $dsp[$rd]",
+                                 [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store (long)
-def MOVL_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_L, (outs),
-                                      (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                                      "mov.l $rs, $dsp[$rd]",
-                                      [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVL_RD16 : I4_OpSzLdRdRsD16<SIZE_L, (outs),
+                                 (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                 "mov.l $rs, $dsp[$rd]",
+                                 [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store i8
 // insにi32immがあるが、asm変換時に上位ビットを切り捨てて8bitにする
@@ -323,39 +323,39 @@ def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
                           [(store (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement load unsigned (byte)
-def MOVUB_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_B, (outs GPR:$rd),
-                                      (ins GPR:$rs, dsp16:$dsp),
-                                      "movu.b $dsp[$rs], $rd",
-                                      [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVUB_D16R : I4_OpSLdRsRdD16<0b01011, SIZE1_B, (outs GPR:$rd),
+                                 (ins GPR:$rs, dsp16:$dsp),
+                                 "movu.b $dsp[$rs], $rd",
+                                 [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
 
 // displacement load unsigned (word)
-def MOVUW_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_W, (outs GPR:$rd),
-                                      (ins GPR:$rs, dsp16:$dsp),
-                                      "movu.w $dsp[$rs], $rd",
-                                      [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVUW_D16R : I4_OpSLdRsRdD16<0b01011, SIZE1_W, (outs GPR:$rd),
+                                 (ins GPR:$rs, dsp16:$dsp),
+                                 "movu.w $dsp[$rs], $rd",
+                                 [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
 
 let Defs = [R0], Uses = [R0] in {
 // NOTE 未使用
 // pop レジスタ
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
-def POP : RXInst2_OpRd<0b011111101011, (outs GPR:$rd), (ins), "pop $rd", []>;
+def POP : I2_OpRd<0b011111101011, (outs GPR:$rd), (ins), "pop $rd", []>;
 
 // NOTE 未使用
 // push レジスタ
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
-def PUSHL_R : RXInst2_OpSzRs<0b0111111010, SIZE_L, (outs), (ins GPR:$rs),
-                             "push.l $rs", []>;
+def PUSHL_R : I2_OpSzRs<0b0111111010, SIZE_L, (outs), (ins GPR:$rs),
+                        "push.l $rs", []>;
 }
 
 // 比較
 let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
-def CMP_RR : RXInst2_OpLdRsRs<0b010001, LD_DIRECT,
-                              (outs), (ins GPR:$rs, GPR:$rs2),
-                              "cmp $rs, $rs2", []>;
+def CMP_RR : I2_OpLdRsRs<0b010001, LD_DIRECT,
+                         (outs), (ins GPR:$rs, GPR:$rs2),
+                         "cmp $rs, $rs2", []>;
 
 // NOTE CMP_I32Rとは命令長が違うだけなので、asm出力しかしないなら差はない
-def CMP_UI4R : RXInst2_OpUi4Rs<0b01100001, (outs), (ins i32imm:$imm, GPR:$rs),
-                               "cmp #$imm, $rs", []>;
+def CMP_UI4R : I2_OpUi4Rs<0b01100001, (outs), (ins i32imm:$imm, GPR:$rs),
+                          "cmp #$imm, $rs", []>;
 
 def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
                        "cmp #$imm, $rs", []>;
@@ -366,8 +366,8 @@ def CMP_I32R : RXInst6<(outs), (ins i32imm:$imm, GPR:$rs),
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
 class Branch_B<RXCd cd, string asmstr>
-    : RXInst2_OpCdDsp<cd, (outs), (ins brtarget:$dsp),
-                      !strconcat(asmstr, " $dsp"), []>;
+    : I2_OpCdDsp<cd, (outs), (ins brtarget:$dsp),
+                 !strconcat(asmstr, " $dsp"), []>;
 def BEQ  : Branch_B<CD_BEQ, "beq">;    // ==
 def BNE  : Branch_B<CD_BNE, "bne">;    // !=
 def BGE  : Branch_B<CD_BGE, "bge">;    // <= (符号付き)
@@ -402,8 +402,8 @@ def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>
 // 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス
 let isBranch = 1, isTerminator = 1, isBarrier = 1 in
-def BRA : RXInst2_OpRs<0b011111110100, (outs), (ins brtarget:$rs),
-                       "bra $rs", [(br bb:$rs)]>;
+def BRA : I2_OpRs<0b011111110100, (outs), (ins brtarget:$rs),
+                  "bra $rs", [(br bb:$rs)]>;
 
 
 // Callの開始終了を表す疑似命令
