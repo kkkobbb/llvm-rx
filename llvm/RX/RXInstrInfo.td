@@ -81,7 +81,8 @@ def NOP : RXInst1_Op<0b00000011, (outs), (ins), "nop", []>;
 
 // 相対サブルーチン分岐 pcdsp:24
 let isCall = 1 in
-def BSRA : RXInst4<(outs), (ins bsrtarget:$addr), "bsr $addr", []>;
+def BSRA : RXInst4_OpPcdsp<0b00000101, (outs), (ins bsrtarget:$pcdsp),
+                           "bsr $pcdsp", []>;
 def : Pat<(RXBsr (i32 tglobaladdr:$addr)), (BSRA tglobaladdr:$addr)>;
 def : Pat<(RXBsr (i32 texternalsym:$addr)), (BSRA texternalsym:$addr)>;
 
@@ -267,37 +268,43 @@ def MOVL_RpR : RXInst2_OpSzLdLdRdRs<SIZE_L, LD_INDIRECT, LD_DIRECT,
 
 // NOTE *extload* 上位ビット拡張ロード
 // displacement load (byte)
-def MOVB_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                        "mov.b $dsp[$rs], $rd",
-                        [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVB_D16R : RXInst4_OpSzLdRsRdD16<SIZE_B, LD_INDDSP16, (outs GPR:$rd),
+                                      (ins GPR:$rs, dsp16:$dsp),
+                                      "mov.b $dsp[$rs], $rd",
+                                      [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
 def : Pat<(extloadi8 (addr GPR:$rs, dsp16:$dsp)), (MOVB_D16R GPR:$rs, dsp16:$dsp)>;
 
 // displacement load (word)
-def MOVW_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                        "mov.w $dsp[$rs], $rd",
-                        [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVW_D16R : RXInst4_OpSzLdRsRdD16<SIZE_W, LD_INDDSP16, (outs GPR:$rd),
+                                      (ins GPR:$rs, dsp16:$dsp),
+                                      "mov.w $dsp[$rs], $rd",
+                                      [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
 def : Pat<(extloadi16 (addr GPR:$rs, dsp16:$dsp)), (MOVW_D16R GPR:$rs, dsp16:$dsp)>;
 
 // displacement load (long)
-def MOVL_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                        "mov.l $dsp[$rs], $rd",
-                        [(set GPR:$rd, (load (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVL_D16R : RXInst4_OpSzLdRsRdD16<SIZE_L, LD_INDDSP16, (outs GPR:$rd),
+                                      (ins GPR:$rs, dsp16:$dsp),
+                                      "mov.l $dsp[$rs], $rd",
+                                      [(set GPR:$rd, (load (addr GPR:$rs, dsp16:$dsp)))]>;
 
 // NOTE truncstore* 上位ビット切り捨てストア
 // displacement store (byte)
-def MOVB_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                        "mov.b $rs, $dsp[$rd]",
-                        [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVB_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_B, LD_INDDSP16, (outs),
+                                      (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                      "mov.b $rs, $dsp[$rd]",
+                                      [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store (word)
-def MOVW_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                        "mov.w $rs, $dsp[$rd]",
-                        [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVW_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_W, LD_INDDSP16, (outs),
+                                      (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                      "mov.w $rs, $dsp[$rd]",
+                                      [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store (long)
-def MOVL_RD16 : RXInst4<(outs), (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
-                        "mov.l $rs, $dsp[$rd]",
-                        [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+def MOVL_RD16 : RXInst4_OpSzLdRdRsD16<SIZE_L, LD_INDDSP16, (outs),
+                                      (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                      "mov.l $rs, $dsp[$rd]",
+                                      [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement store i8
 // insにi32immがあるが、asm変換時に上位ビットを切り捨てて8bitにする
@@ -316,14 +323,16 @@ def MOVL_I32D16 : RXInst8<(outs), (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
                           [(store (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement load unsigned (byte)
-def MOVUB_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                        "movu.b $dsp[$rs], $rd",
-                        [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVUB_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_B, LD_INDDSP16, (outs GPR:$rd),
+                                      (ins GPR:$rs, dsp16:$dsp),
+                                      "movu.b $dsp[$rs], $rd",
+                                      [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
 
 // displacement load unsigned (word)
-def MOVUW_D16R : RXInst4<(outs GPR:$rd), (ins GPR:$rs, dsp16:$dsp),
-                        "movu.w $dsp[$rs], $rd",
-                        [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
+def MOVUW_D16R : RXInst4_OpSLdRsRdD16<0b01011, SIZE1_W, LD_INDDSP16, (outs GPR:$rd),
+                                      (ins GPR:$rs, dsp16:$dsp),
+                                      "movu.w $dsp[$rs], $rd",
+                                      [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
 
 let Defs = [R0], Uses = [R0] in {
 // NOTE 未使用

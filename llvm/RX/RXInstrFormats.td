@@ -11,8 +11,8 @@ class RXLd<bits<2> val> {
 }
 def LD_DIRECT   : RXLd<0b11>;
 def LD_INDIRECT : RXLd<0b00>;
-def LD_INDOFF8  : RXLd<0b01>;
-def LD_INDOFF16 : RXLd<0b10>;
+def LD_INDDSP8  : RXLd<0b01>;
+def LD_INDDSP16 : RXLd<0b10>;
 
 class RXSize<bits<2> val> {
   bits<2> Value = val;
@@ -20,6 +20,12 @@ class RXSize<bits<2> val> {
 def SIZE_B : RXSize<0b00>;
 def SIZE_W : RXSize<0b01>;
 def SIZE_L : RXSize<0b10>;
+
+class RXSize1<bits<1> val> {
+  bits<1> Value = val;
+}
+def SIZE1_B : RXSize1<0b0>;
+def SIZE1_W : RXSize1<0b1>;
 
 class RXCd<bits<4> val> {
   bits<4> Value = val;
@@ -231,6 +237,62 @@ class RXInst4<dag outs, dag ins, string asmstr, list<dag> pattern>
     : RXInst<outs, ins, asmstr, pattern> {
   field bits<32> Inst;
   let Size = 4;
+}
+
+class RXInst4_OpPcdsp<bits<8> opcode, dag outs, dag ins, string asmstr,
+                      list<dag> pattern>
+    : RXInst4<outs, ins, asmstr, pattern> {
+  field bits<24> pcdsp;
+
+  let Inst{31-24} = opcode;
+  let Inst{23-0} = pcdsp;
+}
+
+class RXInst4_OpSzLdRsRdD16<RXSize size, RXLd ld, dag outs, dag ins,
+                            string asmstr, list<dag> pattern>
+    : RXInst4<outs, ins, asmstr, pattern> {
+  field bits<4> rs;
+  field bits<4> rd;
+  field bits<16> dsp;
+
+  let Inst{31-30} = 0b11;
+  let Inst{29-28} = size.Value;
+  let Inst{27-26} = 0b11;
+  let Inst{25-24} = ld.Value;
+  let Inst{23-20} = rs;
+  let Inst{19-16} = rd;
+  let Inst{15-0} = dsp;
+}
+
+class RXInst4_OpSzLdRdRsD16<RXSize size, RXLd ld, dag outs, dag ins,
+                            string asmstr, list<dag> pattern>
+    : RXInst4<outs, ins, asmstr, pattern> {
+  field bits<4> rd;
+  field bits<4> rs;
+  field bits<16> dsp;
+
+  let Inst{31-30} = 0b11;
+  let Inst{29-28} = size.Value;
+  let Inst{27-26} = ld.Value;
+  let Inst{25-24} = 0b11;
+  let Inst{23-20} = rd;
+  let Inst{19-16} = rs;
+  let Inst{15-0} = dsp;
+}
+
+class RXInst4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, RXLd ld, dag outs,
+                           dag ins, string asmstr, list<dag> pattern>
+    : RXInst4<outs, ins, asmstr, pattern> {
+  field bits<4> rs;
+  field bits<4> rd;
+  field bits<16> dsp;
+
+  let Inst{31-27} = opcode;
+  let Inst{26} = size.Value;
+  let Inst{25-24} = ld.Value;
+  let Inst{23-20} = rs;
+  let Inst{19-16} = rd;
+  let Inst{15-0} = dsp;
 }
 
 // 5byte format

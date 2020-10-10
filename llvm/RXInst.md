@@ -89,3 +89,31 @@ SHLR_RR    1111110101100000 rs== rd==
 ROTL_RR    1111110101100110 rs== rd==
 ROTR_RR    1111110101100100 rs== rd==
 ```
+
+
+## 4byte命令
+
+### RXInst4_OpPcdsp
+```
+BSRA        000000101 pcdsp24bit
+```
+
+### RXInst4_OpSzLdRsRdD16
+```
+MOVB_D16R   11 sz 11 ld rs== rd== dsp16bit
+MOVW_D16R   11 sz 11 ld rs== rd== dsp16bit
+MOVL_D16R   11 sz 11 ld rs== rd== dsp16bit
+```
+
+### RXInst4_OpSzLdRdRsD16
+```
+MOVB_RD16   11 sz ld 11 rd== rs== dsp16bit
+MOVW_RD16   11 sz ld 11 rd== rs== dsp16bit
+MOVL_RD16   11 sz ld 11 rd== rs== dsp16bit
+```
+
+### RXInst4_OpSLdRsRdD16
+```
+MOVUB_D16R  01011 s ld rs== rd== dsp16bit
+MOVUW_D16R  01011 s ld rs== rd== dsp16bit
+```
