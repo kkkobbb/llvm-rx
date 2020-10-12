@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Length of displacement
 class RXLd<bits<2> val> {
   bits<2> Value = val;
 }
@@ -14,6 +15,7 @@ def LD_INDIRECT : RXLd<0b00>;
 def LD_INDDSP8  : RXLd<0b01>;
 def LD_INDDSP16 : RXLd<0b10>;
 
+// Length of immediate
 class RXLi<bits<2> val> {
   bits<2> Value = val;
 }
@@ -35,6 +37,7 @@ class RXSize1<bits<1> val> {
 def SIZE1_B : RXSize1<0b0>;
 def SIZE1_W : RXSize1<0b1>;
 
+// Condition code
 class RXCd<bits<4> val> {
   bits<4> Value = val;
 }

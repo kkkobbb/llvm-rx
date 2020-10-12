@@ -54,7 +54,7 @@ BitVector RXRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 void RXRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                          int SPAdj, unsigned FIOperandNum,
                                          RegScavenger *RS) const {
-  LLVM_DEBUG(dbgs() << "### eliminateFrameIndex 0\n");
+  LLVM_DEBUG(dbgs() << "### eliminateFrameIndex\n");
 
   assert(SPAdj == 0 && "Unexpected non-zero SPAdj value");
 
