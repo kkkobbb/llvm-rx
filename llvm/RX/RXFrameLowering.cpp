@@ -20,6 +20,9 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
 #include "llvm/MC/MCDwarf.h"
+#include "llvm/Support/Debug.h"
+
+#define DEBUG_TYPE "rx-framelowering"
 
 using namespace llvm;
 
@@ -76,7 +79,8 @@ void RXFrameLowering::emitPrologue(MachineFunction &MF,
   const Register frameReg = RX::R0;
   BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_I32RR), frameReg)
       .addReg(frameReg)
-      .addImm(-StackSize);
+      .addImm(-StackSize)
+      .setMIFlag(MachineInstr::FrameSetup);
 }
 
 void RXFrameLowering::emitEpilogue(MachineFunction &MF,
@@ -85,6 +89,8 @@ void RXFrameLowering::emitEpilogue(MachineFunction &MF,
   MachineFrameInfo &MFI = MF.getFrameInfo();
   DebugLoc DL = MBBI->getDebugLoc();
   const RXInstrInfo *TII = STI.getInstrInfo();
+
+  LLVM_DEBUG(dbgs() << "### emitEpilogue " << MFI.getCalleeSavedInfo().size() << "\n");
 
   // Get the number of bytes from FrameInfo
   uint64_t StackSize = MFI.getStackSize();
@@ -97,7 +103,8 @@ void RXFrameLowering::emitEpilogue(MachineFunction &MF,
   const Register frameReg = RX::R0;
   BuildMI(MBB, MBBI, DL, TII->get(RX::ADD_I32RR), frameReg)
       .addReg(frameReg)
-      .addImm(StackSize);
+      .addImm(StackSize)
+      .setMIFlag(MachineInstr::FrameDestroy);
 }
 
 // Eliminate ADJCALLSTACKDOWN, ADJCALLSTACKUP pseudo instructions.
