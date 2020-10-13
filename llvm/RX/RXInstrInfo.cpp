@@ -89,8 +89,14 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
 // The contents of values added to Cond are not examined outside of
 // RXInstrInfo, giving us flexibility in what to push to it. For RX, we
 // push BranchOpcode, Reg1, Reg2.
-static void parseCondBranch(MachineInstr &LastInst, MachineBasicBlock *&Target,
+static bool parseCondBranch(MachineInstr &LastInst, MachineBasicBlock *&Target,
                             SmallVectorImpl<MachineOperand> &Cond) {
+  LLVM_DEBUG(dbgs() << "### parseCondBranch " << LastInst << "\n");
+
+  // オペランドの数がpBRCOND_*命令と異なる場合、何もしない
+  if (LastInst.getNumOperands() != 3)
+    return true;
+
   // NOTE ほぼRISCV
 
   // Block ends with fall-through condbranch.
@@ -100,6 +106,7 @@ static void parseCondBranch(MachineInstr &LastInst, MachineBasicBlock *&Target,
   Cond.push_back(MachineOperand::CreateImm(LastInst.getOpcode()));
   Cond.push_back(LastInst.getOperand(0));
   Cond.push_back(LastInst.getOperand(1));
+  return false;
 }
 
 static unsigned getOppositeBranchOpcode(int Opc) {
@@ -202,16 +209,18 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
 
   // Handle a single conditional branch.
   if (NumTerminators == 1 && I->getDesc().isConditionalBranch()) {
-    parseCondBranch(*I, TBB, Cond);
-    return false;
+    return parseCondBranch(*I, TBB, Cond);
   }
 
   // Handle a conditional branch followed by an unconditional branch.
   if (NumTerminators == 2 && std::prev(I)->getDesc().isConditionalBranch() &&
       I->getDesc().isUnconditionalBranch()) {
-    parseCondBranch(*std::prev(I), TBB, Cond);
-    FBB = I->getOperand(0).getMBB();
-    return false;
+    if(parseCondBranch(*std::prev(I), TBB, Cond)) {
+      return true;
+    } else {
+      FBB = I->getOperand(0).getMBB();
+      return false;
+    }
   }
 
   // Otherwise, we can't handle this.
