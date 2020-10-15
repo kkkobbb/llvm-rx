@@ -18,7 +18,7 @@ def CC_RX : CallingConv<[
     // i16型の引数はi32型に昇格する
     CCIfType<[i16], CCPromoteToType<i32>>,
     // i32型はレジスタ渡し
-    CCIfType<[i32], CCAssignToReg<[R2, R3, R4, R5, R6, R7, R8, R9]>>,
+    CCIfType<[i32], CCAssignToReg<[R1, R2, R3, R4]>>,
     // レジスタに収まらなかった場合、スタックに渡す
     // NOTE llvm/include/llvm/Target/TargetCallingConv.td CCAssignToStack
     // NOTE CCAssignToStack<確保するサイス、アラインメント> (0の場合ABIの値を使用する)
@@ -28,8 +28,8 @@ def CC_RX : CallingConv<[
 // 戻り値
 def RetCC_RX : CallingConv<[
     // i32型はレジスタに渡す
-    CCIfType<[i32], CCAssignToReg<[R1]>>
+    CCIfType<[i32], CCAssignToReg<[R1, R2, R3, R4]>>
 ]>;
 
 // 呼び出し先退避レジスタ
-def CSR : CalleeSavedRegs<(add (sequence "R%u", 2, 15))>;
+def CSR : CalleeSavedRegs<(sequence "R%u", 6, 13)>;
