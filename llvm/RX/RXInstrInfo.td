@@ -136,7 +136,7 @@ def MUL_RRR : I3_OpRdRsRs<0b111111110011, (outs GPR:$rd),
 // sdivが出た場合、smullohiを使って乗算に変換される
 //
 // rdとrd2は連番となる必要がある
-// GPR64_loはR2のみ GPR64_hiはR3のみとして連番にしている
+// GPR64_lo,GPR64_hiをそれぞれレジスタ１つのみ定義することで連番にしている
 //
 // ただし、レジスタ割り当てに失敗するかもしれない
 // TODO EMUL_I32R 他の方法があれば修正する or SMUL_LOHIもExpandにする
