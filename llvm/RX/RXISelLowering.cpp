@@ -88,6 +88,10 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   // NOTE グローバル変数へのアクセス
   setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
 
+  // NOTE SELECT_CCをSELECTにする
+  setOperationAction(ISD::SELECT, MVT::i32, Custom);
+  setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);
+
   // NOTE llvm/include/llvm/CodeGen/TargetLowering.h setMaxAtomicSizeInBitsSupported
   // NOTE バックエンドがサポートする最大のアトミック操作のサイズ
   // これより大きい場合、__atomic_*ライブラリに展開される
@@ -109,6 +113,8 @@ SDValue RXTargetLowering::LowerOperation(SDValue Op,
     report_fatal_error("unimplemented operand");
   case ISD::GlobalAddress:
     return lowerGlobalAddress(Op, DAG);
+  case ISD::SELECT:
+    return lowerSELECT(Op, DAG);
   }
 }
 
@@ -129,6 +135,233 @@ SDValue RXTargetLowering::lowerGlobalAddress(SDValue Op,
     return DAG.getNode(ISD::ADD, DL, Ty, Addr,
                        DAG.getConstant(Offset, DL, MVT::i32));
   return Addr;
+}
+
+// Changes the condition code and swaps operands if necessary, so the SetCC
+// operation matches one of the comparisons supported directly in the RISC-V
+// ISA.
+static void normaliseSetCC(SDValue &LHS, SDValue &RHS, ISD::CondCode &CC) {
+  // NOTE ほぼRISCV
+  switch (CC) {
+  default:
+    break;
+  case ISD::SETGT:
+  case ISD::SETLE:
+  case ISD::SETUGT:
+  case ISD::SETULE:
+    CC = ISD::getSetCCSwappedOperands(CC);
+    std::swap(LHS, RHS);
+    break;
+  }
+}
+
+// Return the RX branch opcode that matches the given DAG integer
+// condition code. The CondCode must be one of those supported by the RX
+// ISA (see normaliseSetCC).
+static unsigned getBranchOpcodeForIntCondCode(ISD::CondCode CC) {
+  // NOTE ほぼRISCV
+  switch (CC) {
+  default:
+    llvm_unreachable("Unsupported CondCode");
+  case ISD::SETEQ:
+    return RX::pBRCOND_EQ;
+  case ISD::SETNE:
+    return RX::pBRCOND_NE;
+  case ISD::SETLT:
+    return RX::pBRCOND_LT;
+  case ISD::SETGE:
+    return RX::pBRCOND_GE;
+  case ISD::SETULT:
+    return RX::pBRCOND_ULT;
+  case ISD::SETUGE:
+    return RX::pBRCOND_UGE;
+  }
+}
+
+SDValue RXTargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
+  // TODO ほぼRISCV
+  SDValue CondV = Op.getOperand(0);
+  SDValue TrueV = Op.getOperand(1);
+  SDValue FalseV = Op.getOperand(2);
+  SDLoc DL(Op);
+  MVT XLenVT = MVT::i32;
+
+  // If the result type is XLenVT and CondV is the output of a SETCC node
+  // which also operated on XLenVT inputs, then merge the SETCC node into the
+  // lowered RXISD::SELECT_CC to take advantage of the integer
+  // compare+branch instructions. i.e.:
+  // (select (setcc lhs, rhs, cc), truev, falsev)
+  // -> (rxisd::select_cc lhs, rhs, cc, truev, falsev)
+  if (Op.getSimpleValueType() == XLenVT && CondV.getOpcode() == ISD::SETCC &&
+      CondV.getOperand(0).getSimpleValueType() == XLenVT) {
+    SDValue LHS = CondV.getOperand(0);
+    SDValue RHS = CondV.getOperand(1);
+    auto CC = cast<CondCodeSDNode>(CondV.getOperand(2));
+    ISD::CondCode CCVal = CC->get();
+
+    normaliseSetCC(LHS, RHS, CCVal);
+
+    SDValue TargetCC = DAG.getConstant(CCVal, DL, XLenVT);
+    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+    SDValue Ops[] = {LHS, RHS, TargetCC, TrueV, FalseV};
+    return DAG.getNode(RXISD::SELECT_CC, DL, VTs, Ops);
+  }
+
+  // Otherwise:
+  // (select condv, truev, falsev)
+  // -> (rxisd::select_cc condv, zero, setne, truev, falsev)
+  SDValue Zero = DAG.getConstant(0, DL, XLenVT);
+  SDValue SetNE = DAG.getConstant(ISD::SETNE, DL, XLenVT);
+
+  SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+  SDValue Ops[] = {CondV, Zero, SetNE, TrueV, FalseV};
+
+  return DAG.getNode(RXISD::SELECT_CC, DL, VTs, Ops);
+}
+
+static bool isSelectPseudo(MachineInstr &MI) {
+  switch (MI.getOpcode()) {
+  default:
+    return false;
+  case RX::Select_GPR_Using_CC_GPR:
+    return true;
+  }
+}
+
+static MachineBasicBlock *emitSelectPseudo(MachineInstr &MI,
+                                           MachineBasicBlock *BB) {
+  // NOTE ほぼRISCV
+
+  // To "insert" Select_* instructions, we actually have to insert the triangle
+  // control-flow pattern.  The incoming instructions know the destination vreg
+  // to set, the condition code register to branch on, the true/false values to
+  // select between, and the condcode to use to select the appropriate branch.
+  //
+  // We produce the following control flow:
+  //     HeadMBB
+  //     |  \
+  //     |  IfFalseMBB
+  //     | /
+  //    TailMBB
+  //
+  // When we find a sequence of selects we attempt to optimize their emission
+  // by sharing the control flow. Currently we only handle cases where we have
+  // multiple selects with the exact same condition (same LHS, RHS and CC).
+  // The selects may be interleaved with other instructions if the other
+  // instructions meet some requirements we deem safe:
+  // - They are debug instructions. Otherwise,
+  // - They do not have side-effects, do not access memory and their inputs do
+  //   not depend on the results of the select pseudo-instructions.
+  // The TrueV/FalseV operands of the selects cannot depend on the result of
+  // previous selects in the sequence.
+  // These conditions could be further relaxed. See the X86 target for a
+  // related approach and more information.
+  Register LHS = MI.getOperand(1).getReg();
+  Register RHS = MI.getOperand(2).getReg();
+  auto CC = static_cast<ISD::CondCode>(MI.getOperand(3).getImm());
+
+  SmallVector<MachineInstr *, 4> SelectDebugValues;
+  SmallSet<Register, 4> SelectDests;
+  SelectDests.insert(MI.getOperand(0).getReg());
+
+  MachineInstr *LastSelectPseudo = &MI;
+
+  for (auto E = BB->end(), SequenceMBBI = MachineBasicBlock::iterator(MI);
+       SequenceMBBI != E; ++SequenceMBBI) {
+    if (SequenceMBBI->isDebugInstr())
+      continue;
+    else if (isSelectPseudo(*SequenceMBBI)) {
+      if (SequenceMBBI->getOperand(1).getReg() != LHS ||
+          SequenceMBBI->getOperand(2).getReg() != RHS ||
+          SequenceMBBI->getOperand(3).getImm() != CC ||
+          SelectDests.count(SequenceMBBI->getOperand(4).getReg()) ||
+          SelectDests.count(SequenceMBBI->getOperand(5).getReg()))
+        break;
+      LastSelectPseudo = &*SequenceMBBI;
+      SequenceMBBI->collectDebugValues(SelectDebugValues);
+      SelectDests.insert(SequenceMBBI->getOperand(0).getReg());
+    } else {
+      if (SequenceMBBI->hasUnmodeledSideEffects() ||
+          SequenceMBBI->mayLoadOrStore())
+        break;
+      if (llvm::any_of(SequenceMBBI->operands(), [&](MachineOperand &MO) {
+            return MO.isReg() && MO.isUse() && SelectDests.count(MO.getReg());
+          }))
+        break;
+    }
+  }
+
+  const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
+  const BasicBlock *LLVM_BB = BB->getBasicBlock();
+  DebugLoc DL = MI.getDebugLoc();
+  MachineFunction::iterator I = ++BB->getIterator();
+
+  MachineBasicBlock *HeadMBB = BB;
+  MachineFunction *F = BB->getParent();
+  MachineBasicBlock *TailMBB = F->CreateMachineBasicBlock(LLVM_BB);
+  MachineBasicBlock *IfFalseMBB = F->CreateMachineBasicBlock(LLVM_BB);
+
+  F->insert(I, IfFalseMBB);
+  F->insert(I, TailMBB);
+
+  // Transfer debug instructions associated with the selects to TailMBB.
+  for (MachineInstr *DebugInstr : SelectDebugValues) {
+    TailMBB->push_back(DebugInstr->removeFromParent());
+  }
+
+  // Move all instructions after the sequence to TailMBB.
+  TailMBB->splice(TailMBB->end(), HeadMBB,
+                  std::next(LastSelectPseudo->getIterator()), HeadMBB->end());
+  // Update machine-CFG edges by transferring all successors of the current
+  // block to the new block which will contain the Phi nodes for the selects.
+  TailMBB->transferSuccessorsAndUpdatePHIs(HeadMBB);
+  // Set the successors for HeadMBB.
+  HeadMBB->addSuccessor(IfFalseMBB);
+  HeadMBB->addSuccessor(TailMBB);
+
+  // Insert appropriate branch.
+  unsigned Opcode = getBranchOpcodeForIntCondCode(CC);
+
+  BuildMI(HeadMBB, DL, TII.get(Opcode))
+    .addReg(LHS)
+    .addReg(RHS)
+    .addMBB(TailMBB);
+
+  // IfFalseMBB just falls through to TailMBB.
+  IfFalseMBB->addSuccessor(TailMBB);
+
+  // Create PHIs for all of the select pseudo-instructions.
+  auto SelectMBBI = MI.getIterator();
+  auto SelectEnd = std::next(LastSelectPseudo->getIterator());
+  auto InsertionPoint = TailMBB->begin();
+  while (SelectMBBI != SelectEnd) {
+    auto Next = std::next(SelectMBBI);
+    if (isSelectPseudo(*SelectMBBI)) {
+      // %Result = phi [ %TrueValue, HeadMBB ], [ %FalseValue, IfFalseMBB ]
+      BuildMI(*TailMBB, InsertionPoint, SelectMBBI->getDebugLoc(),
+              TII.get(RX::PHI), SelectMBBI->getOperand(0).getReg())
+          .addReg(SelectMBBI->getOperand(4).getReg())
+          .addMBB(HeadMBB)
+          .addReg(SelectMBBI->getOperand(5).getReg())
+          .addMBB(IfFalseMBB);
+      SelectMBBI->eraseFromParent();
+    }
+    SelectMBBI = Next;
+  }
+
+  F->getProperties().reset(MachineFunctionProperties::Property::NoPHIs);
+  return TailMBB;
+}
+
+MachineBasicBlock *
+RXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
+                                                 MachineBasicBlock *BB) const {
+  switch (MI.getOpcode()) {
+  default:
+    llvm_unreachable("Unexpected instr type to insert");
+  case RX::Select_GPR_Using_CC_GPR:
+    return emitSelectPseudo(MI, BB);
+  }
 }
 
 // NOTE llvm/include/llvm/CodeGen/TargetLowering.h LowerFormalArguments
@@ -463,6 +696,10 @@ const char *RXTargetLowering::getTargetNodeName(unsigned Opcode) const {
   switch ((RXISD::NodeType)Opcode) {
   case RXISD::FIRST_NUMBER:
     break;
+
+  case RXISD::SELECT_CC:
+    return "RXISD::SELECT_CC";
+
   case RXISD::BSR:
     return "RXISD::BSR";
   case RXISD::RTS:

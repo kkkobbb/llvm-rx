@@ -25,6 +25,12 @@ def RXBsr : SDNode<"RXISD::BSR", SDT_RXBsr,
 def RXRts : SDNode<"RXISD::RTS", SDTNone,
                    [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
+def SDT_RXSelectCC : SDTypeProfile<1, 5, [SDTCisSameAs<1, 2>,
+                                             SDTCisSameAs<0, 4>,
+                                             SDTCisSameAs<4, 5>]>;
+def RXSelectCC : SDNode<"RXISD::SELECT_CC", SDT_RXSelectCC,
+                        [SDNPInGlue]>;
+
 // Target-independent type requirements, but with target-specific formats.
 def SDT_CallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 def SDT_CallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
@@ -414,6 +420,15 @@ let isBranch = 1, isTerminator = 1, isBarrier = 1 in
 def BRA : I2_OpRs<0b011111110100, (outs), (ins pcdsp24:$rs),
                   "bra $rs", [(br bb:$rs)]>;
 
+let usesCustomInserter = 1 in
+class SelectCC_rrirr<RegisterClass valty, RegisterClass cmpty>
+    : RXInstPseudo<(outs valty:$dst),
+                   (ins cmpty:$lhs, cmpty:$rhs, i32imm:$imm,
+                    valty:$truev, valty:$falsev), "",
+                   [(set valty:$dst, (RXSelectCC cmpty:$lhs, cmpty:$rhs,
+                    (i32 imm:$imm), valty:$truev, valty:$falsev))]>;
+
+def Select_GPR_Using_CC_GPR : SelectCC_rrirr<GPR, GPR>;
 
 // Callの開始終了を表す疑似命令
 let Defs = [R0], Uses = [R0] in {

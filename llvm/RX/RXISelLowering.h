@@ -24,6 +24,8 @@ namespace RXISD {
 enum NodeType : unsigned {
   FIRST_NUMBER = ISD::BUILTIN_OP_END,
 
+  SELECT_CC,
+
   BSR,
   RTS,
 
@@ -52,6 +54,10 @@ public:
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
   // This method returns the name of a target specific DAG node.
   const char *getTargetNodeName(unsigned Opcode) const override;
+  MachineBasicBlock *
+  EmitInstrWithCustomInserter(MachineInstr &MI,
+                              MachineBasicBlock *BB) const override;
+
 
 private:
   // Lower incoming arguments, copy physregs into vregs
@@ -73,6 +79,7 @@ private:
                           SmallVectorImpl<SDValue> &InVals) const;
 
   SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerSELECT(SDValue Op, SelectionDAG &DAG) const;
 };
 }
 
