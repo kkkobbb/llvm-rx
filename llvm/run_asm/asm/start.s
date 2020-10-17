@@ -38,9 +38,13 @@ start_usermode:
 	xor r14, r14
 	xor r15, r15
 
-before_run:  ; 外部関数実行前にレジスタ等を変更するためのブレークポイント用
+; INIT REGS
+
+; ADDITIONAL CODE
+
+before_call:  ; 外部関数実行前にレジスタ等を変更するためのブレークポイント用
 	; 外部関数実行
-	bsr run
+	bsr main ; CALL EXTERNAL FUNCTION
 
 	; ユーザーモードなのでINT命令で特権モードにして、wait実行して終了
 	int #0
