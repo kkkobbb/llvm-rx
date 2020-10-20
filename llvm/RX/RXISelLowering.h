@@ -28,18 +28,6 @@ enum NodeType : unsigned {
 
   BSR,
   RTS,
-
-  CMP,
-  BEQ,
-  BNE,
-  BGE,
-  BLE,
-  BGT,
-  BLT,
-  BGEU,
-  BLEU,
-  BGTU,
-  BLTU,
 };
 }
 

@@ -180,7 +180,7 @@ bool RXExpandPseudo::expandStoreCond(MachineBasicBlock &MBB,
   BuildMI(MBB, MBBI, DL, TII->get(scOp))
       .addReg(MI.getOperand(0).getReg(), RegState::Define);
 
-  //NextMBBI = MBB.end();
+  // 入れ替えなのでNextMBBIは変更なし
   MI.eraseFromParent();
   return true;
 }

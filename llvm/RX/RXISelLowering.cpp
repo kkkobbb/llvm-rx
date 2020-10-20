@@ -128,6 +128,9 @@ SDValue RXTargetLowering::lowerGlobalAddress(SDValue Op,
 
   // NOTE 絶対アドレスを格納するのでBSR命令では使えない
   // TODO 相対アドレスを格納することは可能? その場合、BSR以外の命令に影響は?
+  //      以下使えそうな命令
+  //        'MVFC PC,R1' この命令の番地をR1に格納する
+  //        'PUSHC PC'   この命令の番地をスタックに格納する
   SDValue Target = DAG.getTargetGlobalAddress(N->getGlobal(), DL, Ty, 0, 0);
   SDValue Addr = SDValue(DAG.getMachineNode(RX::MOV_I32R, SDLoc(N), Ty, Target), 0);
 
@@ -704,30 +707,6 @@ const char *RXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     return "RXISD::BSR";
   case RXISD::RTS:
     return "RXISD::RTS";
-
-  case RXISD::CMP:
-    return "RXISD::CMP";
-
-  case RXISD::BEQ:
-    return "RXISD::BEQ";
-  case RXISD::BNE:
-    return "RXISD::BNE";
-  case RXISD::BGE:
-    return "RXISD::BGE";
-  case RXISD::BLE:
-    return "RXISD::BLE";
-  case RXISD::BGT:
-    return "RXISD::BGT";
-  case RXISD::BLT:
-    return "RXISD::BLT";
-  case RXISD::BGEU:
-    return "RXISD::BGEU";
-  case RXISD::BLEU:
-    return "RXISD::BLEU";
-  case RXISD::BGTU:
-    return "RXISD::BGTU";
-  case RXISD::BLTU:
-    return "RXISD::BLTU";
   }
 
   return nullptr;

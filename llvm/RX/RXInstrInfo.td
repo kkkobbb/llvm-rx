@@ -419,7 +419,7 @@ def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class StoreCondReg<RXCd cd, string asmstr>
     : I3_OpSzLdRdCd<SIZE_L, LD_DIRECT, cd, (outs GPR:$rd), (ins),
-                 !strconcat(asmstr, " $rd"), []>;
+                    !strconcat(asmstr, " $rd"), []>;
 def SCEQ  : StoreCondReg<CD_EQ, "sceq">;    // ==
 def SCNE  : StoreCondReg<CD_NE, "scne">;    // !=
 def SCGE  : StoreCondReg<CD_GE, "scge">;    // <= (符号付き)
