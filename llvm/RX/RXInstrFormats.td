@@ -41,21 +41,21 @@ def SIZE1_W : RXSize1<0b1>;
 class RXCd<bits<4> val> {
   bits<4> Value = val;
 }
-def CD_BEQ  : RXCd<0b0000>;
-def CD_BNE  : RXCd<0b0001>;
-def CD_BGEU : RXCd<0b0010>;
-def CD_BLTU : RXCd<0b0011>;
-def CD_BGTU : RXCd<0b0100>;
-def CD_BLEU : RXCd<0b0101>;
-def CD_BPZ  : RXCd<0b0110>;
-def CD_BN   : RXCd<0b0111>;
-def CD_BGE  : RXCd<0b1000>;
-def CD_BLT  : RXCd<0b1001>;
-def CD_BGT  : RXCd<0b1010>;
-def CD_BLE  : RXCd<0b1011>;
-def CD_BO   : RXCd<0b1100>;
-def CD_BNO  : RXCd<0b1101>;
-def CD_BRAB : RXCd<0b1110>;
+def CD_EQ  : RXCd<0b0000>;
+def CD_NE  : RXCd<0b0001>;
+def CD_GEU : RXCd<0b0010>;
+def CD_LTU : RXCd<0b0011>;
+def CD_GTU : RXCd<0b0100>;
+def CD_LEU : RXCd<0b0101>;
+def CD_PZ  : RXCd<0b0110>;
+def CD_N   : RXCd<0b0111>;
+def CD_GE  : RXCd<0b1000>;
+def CD_LT  : RXCd<0b1001>;
+def CD_GT  : RXCd<0b1010>;
+def CD_LE  : RXCd<0b1011>;
+def CD_O   : RXCd<0b1100>;
+def CD_NO  : RXCd<0b1101>;
+def CD_RAB : RXCd<0b1110>;
 
 
 // NOTE llvm/include/llvm/Target/Target.td Instruction
@@ -242,6 +242,18 @@ class I3_OpRsRd<bits<16> opcode, dag outs, dag ins, string asmstr,
   let Inst{23-8} = opcode;
   let Inst{7-4} = rs;
   let Inst{3-0} = rd;
+}
+
+class I3_OpSzLdRdCd<RXSize size, RXLd ld, RXCd cd,
+                    dag outs, dag ins, string asmstr, list<dag> pattern>
+    : RXInst3<outs, ins, asmstr, pattern> {
+  bits<4> rd;
+
+  let Inst{23-12} = 0b111111001101;
+  let Inst{11-10} = size.Value;
+  let Inst{9-8} = ld.Value;
+  let Inst{7-4} = rd;
+  let Inst{3-0} = cd.Value;
 }
 
 // 4byte format

@@ -380,19 +380,19 @@ def CMP_I32R : I6_OpLiRsI32<0b011101, (outs), (ins i32imm:$imm, GPR:$rs),
 // 相対条件分岐
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
     isBranch = 1, isTerminator = 1 in
-class Branch_B<RXCd cd, string asmstr>
+class BranchReg<RXCd cd, string asmstr>
     : I2_OpCdDsp<cd, (outs), (ins pcdsp8:$dsp),
                  !strconcat(asmstr, " $dsp"), []>;
-def BEQ  : Branch_B<CD_BEQ, "beq">;    // ==
-def BNE  : Branch_B<CD_BNE, "bne">;    // !=
-def BGE  : Branch_B<CD_BGE, "bge">;    // <= (符号付き)
-def BLE  : Branch_B<CD_BLE, "ble">;    // >= (符号付き)
-def BGT  : Branch_B<CD_BGT, "bgt">;    // <  (符号付き)
-def BLT  : Branch_B<CD_BLT, "blt">;    // >  (符号付き)
-def BGEU : Branch_B<CD_BGEU, "bgeu">;  // <=
-def BLEU : Branch_B<CD_BLEU, "bleu">;  // >=
-def BGTU : Branch_B<CD_BGTU, "bgtu">;  // <
-def BLTU : Branch_B<CD_BLTU, "bltu">;  // >
+def BEQ  : BranchReg<CD_EQ, "beq">;    // ==
+def BNE  : BranchReg<CD_NE, "bne">;    // !=
+def BGE  : BranchReg<CD_GE, "bge">;    // <= (符号付き)
+def BLE  : BranchReg<CD_LE, "ble">;    // >= (符号付き)
+def BGT  : BranchReg<CD_GT, "bgt">;    // <  (符号付き)
+def BLT  : BranchReg<CD_LT, "blt">;    // >  (符号付き)
+def BGEU : BranchReg<CD_GEU, "bgeu">;  // <=
+def BLEU : BranchReg<CD_LEU, "bleu">;  // >=
+def BGTU : BranchReg<CD_GTU, "bgtu">;  // <
+def BLTU : BranchReg<CD_LTU, "bltu">;  // >
 
 // 分岐仮想命令
 // 後の処理で<比較>と<相対条件分岐>に変換される
@@ -413,6 +413,41 @@ def pBRCOND_GE  : BranchPseudo<setge>;
 def pBRCOND_UGE : BranchPseudo<setuge>;
 
 def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>;
+
+
+// 条件設定
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class StoreCondReg<RXCd cd, string asmstr>
+    : I3_OpSzLdRdCd<SIZE_L, LD_DIRECT, cd, (outs GPR:$rd), (ins),
+                 !strconcat(asmstr, " $rd"), []>;
+def SCEQ  : StoreCondReg<CD_EQ, "sceq">;    // ==
+def SCNE  : StoreCondReg<CD_NE, "scne">;    // !=
+def SCGE  : StoreCondReg<CD_GE, "scge">;    // <= (符号付き)
+def SCLE  : StoreCondReg<CD_LE, "scle">;    // >= (符号付き)
+def SCGT  : StoreCondReg<CD_GT, "scgt">;    // <  (符号付き)
+def SCLT  : StoreCondReg<CD_LT, "sclt">;    // >  (符号付き)
+def SCGEU : StoreCondReg<CD_GEU, "scgeu">;  // <=
+def SCLEU : StoreCondReg<CD_LEU, "scleu">;  // >=
+def SCGTU : StoreCondReg<CD_GTU, "scgtu">;  // <
+def SCLTU : StoreCondReg<CD_LTU, "scltu">;  // >
+
+// 条件設定仮想命令
+// 後の処理で<比較>と<条件設定>に変換される
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class StoreCondPseudo<PatFrag Cond>
+    : RXInstPseudo<(outs GPR:$rd), (ins GPRIMM:$lhs, GPR:$rhs),
+                   ";TODO $rd $lhs, $rhs", [(set GPR:$rd, (Cond i32:$lhs, GPR:$rhs))]>;
+def pSETCC_EQ  : StoreCondPseudo<seteq>;
+def pSETCC_NE  : StoreCondPseudo<setne>;
+def pSETCC_LT  : StoreCondPseudo<setlt>;
+def pSETCC_ULT : StoreCondPseudo<setult>;
+def pSETCC_GT  : StoreCondPseudo<setgt>;
+def pSETCC_UGT : StoreCondPseudo<setugt>;
+def pSETCC_LE  : StoreCondPseudo<setle>;
+def pSETCC_ULE : StoreCondPseudo<setule>;
+def pSETCC_GE  : StoreCondPseudo<setge>;
+def pSETCC_UGE : StoreCondPseudo<setuge>;
+
 
 // 相対無条件分岐
 // BRA命令は24bitまでの相対アドレス
