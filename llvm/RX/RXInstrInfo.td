@@ -420,23 +420,23 @@ let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class StoreCondReg<RXCd cd, string asmstr>
     : I3_OpSzLdRdCd<SIZE_L, LD_DIRECT, cd, (outs GPR:$rd), (ins),
                     !strconcat(asmstr, " $rd"), []>;
-def SCEQ  : StoreCondReg<CD_EQ, "sceq">;    // ==
-def SCNE  : StoreCondReg<CD_NE, "scne">;    // !=
-def SCGE  : StoreCondReg<CD_GE, "scge">;    // <= (符号付き)
-def SCLE  : StoreCondReg<CD_LE, "scle">;    // >= (符号付き)
-def SCGT  : StoreCondReg<CD_GT, "scgt">;    // <  (符号付き)
-def SCLT  : StoreCondReg<CD_LT, "sclt">;    // >  (符号付き)
-def SCGEU : StoreCondReg<CD_GEU, "scgeu">;  // <=
-def SCLEU : StoreCondReg<CD_LEU, "scleu">;  // >=
-def SCGTU : StoreCondReg<CD_GTU, "scgtu">;  // <
-def SCLTU : StoreCondReg<CD_LTU, "scltu">;  // >
+def SCEQ  : StoreCondReg<CD_EQ, "sceq.l">;    // ==
+def SCNE  : StoreCondReg<CD_NE, "scne.l">;    // !=
+def SCGE  : StoreCondReg<CD_GE, "scge.l">;    // <= (符号付き)
+def SCLE  : StoreCondReg<CD_LE, "scle.l">;    // >= (符号付き)
+def SCGT  : StoreCondReg<CD_GT, "scgt.l">;    // <  (符号付き)
+def SCLT  : StoreCondReg<CD_LT, "sclt.l">;    // >  (符号付き)
+def SCGEU : StoreCondReg<CD_GEU, "scgeu.l">;  // <=
+def SCLEU : StoreCondReg<CD_LEU, "scleu.l">;  // >=
+def SCGTU : StoreCondReg<CD_GTU, "scgtu.l">;  // <
+def SCLTU : StoreCondReg<CD_LTU, "scltu.l">;  // >
 
 // 条件設定仮想命令
 // 後の処理で<比較>と<条件設定>に変換される
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class StoreCondPseudo<PatFrag Cond>
     : RXInstPseudo<(outs GPR:$rd), (ins GPRIMM:$lhs, GPR:$rhs),
-                   ";TODO $rd $lhs, $rhs", [(set GPR:$rd, (Cond i32:$lhs, GPR:$rhs))]>;
+                   "", [(set GPR:$rd, (Cond i32:$lhs, GPR:$rhs))]>;
 def pSETCC_EQ  : StoreCondPseudo<seteq>;
 def pSETCC_NE  : StoreCondPseudo<setne>;
 def pSETCC_LT  : StoreCondPseudo<setlt>;
