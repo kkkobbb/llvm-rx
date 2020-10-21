@@ -1,6 +1,6 @@
 #!/bin/sh
 # 引数の.sファイルをアセンブル、リンクし、gdb simで実行する
-# 実行時./asm/start.sファイルが存在する必要がる
+# 実行時このファイルと同じ場所にasm/start.sファイルが存在する必要がる
 
 RXPREFIX="${HOME}/rx-binutils/bin/rx-elf-"
 RXAS="${RXPREFIX}as"
