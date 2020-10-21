@@ -131,6 +131,7 @@ SDValue RXTargetLowering::lowerGlobalAddress(SDValue Op,
   //      以下使えそうな命令
   //        'MVFC PC,R1' この命令の番地をR1に格納する
   //        'PUSHC PC'   この命令の番地をスタックに格納する
+  //      アセンブリレベルでは'BSR 絶対アドレス'と書けばアセンブル時に相対アドレスのオペランドにするはず
   SDValue Target = DAG.getTargetGlobalAddress(N->getGlobal(), DL, Ty, 0, 0);
   SDValue Addr = SDValue(DAG.getMachineNode(RX::MOV_I32R, SDLoc(N), Ty, Target), 0);
 

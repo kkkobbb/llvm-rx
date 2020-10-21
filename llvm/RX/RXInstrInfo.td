@@ -48,6 +48,7 @@ def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_CallSeqEnd,
 // アドレス (bsr用)
 def pcdsp24_ptr : Operand<iPTR>;
 
+// TODO 値が範囲内かの確認処理
 // 8bit相対アドレス (BasicBlock用) (-128 <= pcdsp8 <= 127)
 def pcdsp8 : Operand<OtherVT>;
 // 24bit相対アドレス (BasicBlock用)
@@ -114,7 +115,7 @@ def JSR : I2_OpRs<0b011111110001, (outs), (ins GPR:$rs), "jsr $rs",
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def RTS : I1_Op<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
 
-// 加算 i32 reg reg
+// 加算 imm32 reg reg
 def ADD_I32RR : I6_OpLiRsRdI32<0b011100, (outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
                                "add #$imm, $rs, $rd",
                                [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
@@ -207,19 +208,19 @@ def XOR_RR : I3_OpLdRsRd<0b11111100001101, LD_DIRECT, (outs GPR:$rd),
                          "xor $rs, $rd",
                          [(set GPR:$rd, (xor GPR:$src, GPR:$rs))]>;
 
-// 算術右シフト u5 reg reg
+// 算術右シフト uimm5 reg reg
 def SHAR_I5RR : I3_OpI5RsRd<0b11111101101, (outs GPR:$rd),
                             (ins GPR:$rs, uimm5:$imm),
                             "shar #$imm, $rs, $rd",
                             [(set GPR:$rd, (sra GPR:$rs, uimm5:$imm))]>;
 
-// 論理算術左シフト u5 reg reg
+// 論理算術左シフト uimm5 reg reg
 def SHLL_I5RR : I3_OpI5RsRd<0b11111101110, (outs GPR:$rd),
                             (ins GPR:$rs, uimm5:$imm),
                             "shll #$imm, $rs, $rd",
                             [(set GPR:$rd, (shl GPR:$rs, uimm5:$imm))]>;
 
-// 論理右シフト u5 reg reg
+// 論理右シフト uimm5 reg reg
 def SHLR_I5RR : I3_OpI5RsRd<0b11111101100, (outs GPR:$rd),
                             (ins GPR:$rs, uimm5:$imm),
                             "shlr #$imm, $rs, $rd",
@@ -257,7 +258,7 @@ def ROTR_RR : I3_OpRsRd<0b1111110101100100, (outs GPR:$rd),
                         [(set GPR:$rd, (rotr GPR:$src, GPR:$rs))]>;
 }
 
-// move i32 reg
+// move imm32 reg
 def MOV_I32R : I6_OpRdLiI32<0b11111011, (outs GPR:$rd), (ins i32imm:$imm),
                             "mov #$imm, $rd",
                             [(set GPR:$rd, imm:$imm)]>;
@@ -320,19 +321,19 @@ def MOVL_RD16 : I4_OpSzLdRdRsD16<SIZE_L, (outs),
                                  "mov.l $rs, $dsp[$rd]",
                                  [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
 
-// displacement store i8
+// displacement store imm8
 def MOVB_I8D16 : I5_OpLdRdLiSzD16I8<0b111110, SIZE_B, (outs),
                                     (ins imm8:$imm, GPR:$rd, dsp16:$dsp),
                                     "mov.b #${imm}:8, $dsp[$rd]",
                                     [(truncstorei8 (i32 imm8:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
-// displacement store i16
+// displacement store imm16
 def MOVW_I16D16 : I6_OpLdRdLiSzD16I16<0b111110, SIZE_W, (outs),
                                       (ins imm16:$imm, GPR:$rd, dsp16:$dsp),
                                       "mov.w #${imm}:16, $dsp[$rd]",
                                       [(truncstorei16 (i32 imm16:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
-// displacement store i32
+// displacement store imm32
 def MOVL_I32D16 : I8_OpLdRdLiSzD16I32<0b111110, SIZE_L, (outs),
                                       (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
                                       "mov.l #$imm, $dsp[$rd]",
@@ -396,21 +397,20 @@ def BLTU : BranchReg<CD_LTU, "bltu">;  // >
 
 // 分岐仮想命令
 // 後の処理で<比較>と<相対条件分岐>に変換される
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
-    isBranch = 1, isTerminator = 1 in
-class BranchPseudo<PatFrag Cond>
+let isBranch = 1, isTerminator = 1 in
+class BrcondPseudo<PatFrag Cond>
     : RXInstPseudo<(outs), (ins GPRIMM:$lhs, GPR:$rhs, pcdsp8:$dsp),
                    "", [(brcond (i32 (Cond i32:$lhs, GPR:$rhs)), bb:$dsp)]>;
-def pBRCOND_EQ  : BranchPseudo<seteq>;
-def pBRCOND_NE  : BranchPseudo<setne>;
-def pBRCOND_LT  : BranchPseudo<setlt>;
-def pBRCOND_ULT : BranchPseudo<setult>;
-def pBRCOND_GT  : BranchPseudo<setgt>;
-def pBRCOND_UGT : BranchPseudo<setugt>;
-def pBRCOND_LE  : BranchPseudo<setle>;
-def pBRCOND_ULE : BranchPseudo<setule>;
-def pBRCOND_GE  : BranchPseudo<setge>;
-def pBRCOND_UGE : BranchPseudo<setuge>;
+def pBRCOND_EQ  : BrcondPseudo<seteq>;
+def pBRCOND_NE  : BrcondPseudo<setne>;
+def pBRCOND_LT  : BrcondPseudo<setlt>;
+def pBRCOND_ULT : BrcondPseudo<setult>;
+def pBRCOND_GT  : BrcondPseudo<setgt>;
+def pBRCOND_UGT : BrcondPseudo<setugt>;
+def pBRCOND_LE  : BrcondPseudo<setle>;
+def pBRCOND_ULE : BrcondPseudo<setule>;
+def pBRCOND_GE  : BrcondPseudo<setge>;
+def pBRCOND_UGE : BrcondPseudo<setuge>;
 
 def : Pat<(brcond GPR:$cond, bb:$target), (pBRCOND_NE 0, GPR:$cond, bb:$target)>;
 
@@ -433,20 +433,19 @@ def SCLTU : StoreCondReg<CD_LTU, "scltu.l">;  // >
 
 // 条件設定仮想命令
 // 後の処理で<比較>と<条件設定>に変換される
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class StoreCondPseudo<PatFrag Cond>
+class SetccPseudo<PatFrag Cond>
     : RXInstPseudo<(outs GPR:$rd), (ins GPRIMM:$lhs, GPR:$rhs),
                    "", [(set GPR:$rd, (Cond i32:$lhs, GPR:$rhs))]>;
-def pSETCC_EQ  : StoreCondPseudo<seteq>;
-def pSETCC_NE  : StoreCondPseudo<setne>;
-def pSETCC_LT  : StoreCondPseudo<setlt>;
-def pSETCC_ULT : StoreCondPseudo<setult>;
-def pSETCC_GT  : StoreCondPseudo<setgt>;
-def pSETCC_UGT : StoreCondPseudo<setugt>;
-def pSETCC_LE  : StoreCondPseudo<setle>;
-def pSETCC_ULE : StoreCondPseudo<setule>;
-def pSETCC_GE  : StoreCondPseudo<setge>;
-def pSETCC_UGE : StoreCondPseudo<setuge>;
+def pSETCC_EQ  : SetccPseudo<seteq>;
+def pSETCC_NE  : SetccPseudo<setne>;
+def pSETCC_LT  : SetccPseudo<setlt>;
+def pSETCC_ULT : SetccPseudo<setult>;
+def pSETCC_GT  : SetccPseudo<setgt>;
+def pSETCC_UGT : SetccPseudo<setugt>;
+def pSETCC_LE  : SetccPseudo<setle>;
+def pSETCC_ULE : SetccPseudo<setule>;
+def pSETCC_GE  : SetccPseudo<setge>;
+def pSETCC_UGE : SetccPseudo<setuge>;
 
 
 // 相対無条件分岐
@@ -455,6 +454,7 @@ let isBranch = 1, isTerminator = 1, isBarrier = 1 in
 def BRA : I2_OpRs<0b011111110100, (outs), (ins pcdsp24:$rs),
                   "bra $rs", [(br bb:$rs)]>;
 
+// TODO ほぼRISCV
 let usesCustomInserter = 1 in
 class SelectCC_rrirr<RegisterClass valty, RegisterClass cmpty>
     : RXInstPseudo<(outs valty:$dst),
