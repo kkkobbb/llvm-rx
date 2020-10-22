@@ -126,6 +126,10 @@ SDValue RXTargetLowering::lowerGlobalAddress(SDValue Op,
   GlobalAddressSDNode *N = cast<GlobalAddressSDNode>(Op);
   int64_t Offset = N->getOffset();
 
+  // NOTE 絶対アドレスを格納するのでPICは不可
+  if(isPositionIndependent())
+    report_fatal_error("Unsupported position independent code");
+
   // NOTE 絶対アドレスを格納するのでBSR命令では使えない
   // TODO 相対アドレスを格納することは可能? その場合、BSR以外の命令に影響は?
   //      以下使えそうな命令
