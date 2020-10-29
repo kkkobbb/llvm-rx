@@ -197,6 +197,14 @@
     * `analyzeBranch()`で分岐命令の挿入、削除をする可能性があり処理を簡単にするため、一時的に分岐を1命令で表す
 3. `expandPostRAPseudo()`で`CMP`命令、`B*`命令に変換する
 
+### filetype=objを指定する場合
+* `MCCodeEmitter`、`MCAsmBackend`の実装が必要
+    * `MCAsmBackend`には`MCELFObjectTargetWriter`が必要
+    * `llvm/lib/CodeGen/LLVMTargetMachine.cpp` LLVMTargetMachine::addAsmPrinter()から
+    * 対応するファイルは以下となる
+        * `MCTargetDesc/*AsmBackend.*`、`MCTargetDesc/*MCCodeEmitter.*`
+        * `MCTargetDesc/*MCELFObjectWriter.*`
+
 
 ## 参考
 * 公式のバックエンドのソースコード `$LLVM_ROOT/llvm/lib/Target/*`

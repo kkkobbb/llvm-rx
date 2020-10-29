@@ -19,7 +19,9 @@
 #include <memory>
 
 namespace llvm {
+class MCAsmBackend;
 class MCContext;
+class MCCodeEmitter;
 class MCInstrInfo;
 class MCObjectTargetWriter;
 class MCRegisterInfo;
@@ -29,6 +31,17 @@ class Target;
 class Triple;
 class raw_ostream;
 class raw_pwrite_stream;
+
+MCCodeEmitter *createRXMCCodeEmitter(const MCInstrInfo &MCII,
+                                     const MCRegisterInfo &MRI,
+                                     MCContext &Ctx);
+
+MCAsmBackend *createRXAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                 const MCRegisterInfo &MRI,
+                                 const MCTargetOptions &Options);
+
+std::unique_ptr<MCObjectTargetWriter> createRXELFObjectWriter(uint8_t OSABI,
+                                                              bool Is64Bit);
 }
 
 // Defines symbolic names for RX registers.

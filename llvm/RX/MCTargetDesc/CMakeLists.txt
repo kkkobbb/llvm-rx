@@ -1,6 +1,9 @@
 add_llvm_library(LLVMRXDesc
+  RXAsmBackend.cpp
+  RXELFObjectWriter.cpp
   RXInstPrinter.cpp
   RXMCAsmInfo.cpp
+  RXMCCodeEmitter.cpp
   RXMCTargetDesc.cpp
   RXTargetStreamer.cpp
 )

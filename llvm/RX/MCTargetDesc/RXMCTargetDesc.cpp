@@ -86,6 +86,8 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRXTargetMC() {
     TargetRegistry::RegisterMCAsmInfo(*T, createRXMCAsmInfo);
     TargetRegistry::RegisterMCInstrInfo(*T, createRXMCInstrInfo);
     TargetRegistry::RegisterMCRegInfo(*T, createRXMCRegisterInfo);
+    TargetRegistry::RegisterMCAsmBackend(*T, createRXAsmBackend);
+    TargetRegistry::RegisterMCCodeEmitter(*T, createRXMCCodeEmitter);
     TargetRegistry::RegisterMCInstPrinter(*T, createRXMCInstPrinter);
     TargetRegistry::RegisterMCSubtargetInfo(*T, createRXMCSubtargetInfo);
 
