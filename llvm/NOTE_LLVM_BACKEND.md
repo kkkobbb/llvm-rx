@@ -32,6 +32,42 @@
     * `SubtargetFeature`を置き換える新しいクラス?
     * 参考 `$LLVM_ROOT/llvm/include/llvm/Target/Target.td`
 
+### TableGen
+* `llvm-tblgen`コマンド関係のコード
+* 主なコードは以下のパス
+    * `llvm/lib/TableGen/*`
+    * `llvm/include/TableGen/*`
+    * `llvm/utils/TableGen/*`
+        * `*GenMCCodeEmitter.inc`生成処理は`llvm/utils/TableGen/CodeEmitterGen.cpp`
+* `Record`クラスの変数
+    * tdファイルでの`class`定義 `def`定義等の情報を持つ
+    * `getName()`で定義名を取得
+    * `getValues()`で定義された要素を返す
+        * `RecordVal`のリストで返す
+* `RecordVal`
+    * `class`等の内で定義された要素の情報を持つ
+    * `getName()`で要素名を取得
+    * 名前は`Init`クラスとして持っている
+    * `getPrefix()`
+        * `field bit<1> aaa;`等のように宣言にプレフィクスが付いている要素の場合に真
+* `Init`
+    * tdファイル内の記述を表現している?
+    * 文字列として取り出す場合、`((StringInit *)DeclName)->getValue()`のようにcastが必要
+* `PointerIntPair`
+    * ポインタに数ビットの値を埋め込んで管理するためのクラス
+
+### tdファイル
+* `class`定義時に`field`を付けるとオペランドのコード生成では使用されない
+    * `CodeEmitterGen::getInstructionCaseForEncoding()`
+        * `if (RV.getPrefix() || RV.getValue()->isComplete())` (真になると`continue`)
+            *`RV.getPrefix()`は`field`などが付いた宣言の場合に真となる -> 以降の処理で無視される
+    * 以下の関数も参考
+        * `TGParser::ParseDeclaration()`
+        * `llvm/utils/TableGen/TGLexer.h getCode()`
+        * `TGLexer::LexToken()`
+        * `TGLexer::LexIdentifier()`
+
+
 
 ## 移植作業例
 
@@ -204,17 +240,6 @@
     * 対応するファイルは以下となる
         * `MCTargetDesc/*AsmBackend.*`、`MCTargetDesc/*MCCodeEmitter.*`
         * `MCTargetDesc/*MCELFObjectWriter.*`
-
-### tdファイル
-* `class`定義時に`field`を付けるとオペランドのコード生成では使用されない
-    * `CodeEmitterGen::getInstructionCaseForEncoding()`
-        * `if (RV.getPrefix() || RV.getValue()->isComplete())` (真になると`continue`)
-            *`RV.getPrefix()`は`field`などが付いた宣言の場合に真となる -> 以降の処理で無視される
-    * 以下の関数も参考
-        * `TGParser::ParseDeclaration()`
-        * `llvm/utils/TableGen/TGLexer.h getCode()`
-        * `TGLexer::LexToken()`
-        * `TGLexer::LexIdentifier()`
 
 
 ## 参考
