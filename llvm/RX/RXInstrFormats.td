@@ -266,7 +266,7 @@ class RXInst4<dag outs, dag ins, string asmstr, list<dag> pattern>
 class I4_OpD24<bits<8> opcode, dag outs, dag ins, string asmstr,
                list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
-  field bits<24> pcdsp;
+  bits<24> pcdsp;
 
   let Inst{31-24} = opcode;
   let Inst{23-0} = pcdsp;
@@ -275,9 +275,9 @@ class I4_OpD24<bits<8> opcode, dag outs, dag ins, string asmstr,
 class I4_OpSzLdRsRdD16<RXSize size, dag outs, dag ins,
                        string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
-  field bits<4> rs;
-  field bits<4> rd;
-  field bits<16> dsp;
+  bits<4> rs;
+  bits<4> rd;
+  bits<16> dsp;
 
   let Inst{31-30} = 0b11;
   let Inst{29-28} = size.Value;
@@ -291,9 +291,9 @@ class I4_OpSzLdRsRdD16<RXSize size, dag outs, dag ins,
 class I4_OpSzLdRdRsD16<RXSize size, dag outs, dag ins,
                        string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
-  field bits<4> rd;
-  field bits<4> rs;
-  field bits<16> dsp;
+  bits<4> rd;
+  bits<4> rs;
+  bits<16> dsp;
 
   let Inst{31-30} = 0b11;
   let Inst{29-28} = size.Value;
@@ -307,9 +307,9 @@ class I4_OpSzLdRdRsD16<RXSize size, dag outs, dag ins,
 class I4_OpSLdRsRdD16<bits<5> opcode, RXSize1 size, dag outs, dag ins,
                       string asmstr, list<dag> pattern>
     : RXInst4<outs, ins, asmstr, pattern> {
-  field bits<4> rs;
-  field bits<4> rd;
-  field bits<16> dsp;
+  bits<4> rs;
+  bits<4> rd;
+  bits<16> dsp;
 
   let Inst{31-27} = opcode;
   let Inst{26} = size.Value;
@@ -329,9 +329,9 @@ class RXInst5<dag outs, dag ins, string asmstr, list<dag> pattern>
 class I5_OpLdRdLiSzD16I8<bits<6> opcode, RXSize size, dag outs, dag ins,
                          string asmstr, list<dag> pattern>
     : RXInst5<outs, ins, asmstr, pattern> {
-  field bits<4> rd;
-  field bits<16> dsp;
-  field bits<8> imm;
+  bits<4> rd;
+  bits<16> dsp;
+  bits<8> imm;
 
   let Inst{39-34} = opcode;
   let Inst{33-32} = LD_INDDSP16.Value;
@@ -352,9 +352,9 @@ class RXInst6<dag outs, dag ins, string asmstr, list<dag> pattern>
 class I6_OpLiRsRdI32<bits<6> opcode, dag outs, dag ins, string asmstr,
                      list<dag> pattern>
     : RXInst6<outs, ins, asmstr, pattern> {
-  field bits<4> rs;
-  field bits<4> rd;
-  field bits<32> imm;
+  bits<4> rs;
+  bits<4> rd;
+  bits<32> imm;
 
   let Inst{47-42} = opcode;
   let Inst{41-40} = LI_IMM32.Value;
@@ -366,8 +366,8 @@ class I6_OpLiRsRdI32<bits<6> opcode, dag outs, dag ins, string asmstr,
 class I6_OpRdLiI32<bits<8> opcode, dag outs, dag ins, string asmstr,
                    list<dag> pattern>
     : RXInst6<outs, ins, asmstr, pattern> {
-  field bits<4> rd;
-  field bits<32> imm;
+  bits<4> rd;
+  bits<32> imm;
 
   let Inst{47-40} = opcode;
   let Inst{39-36} = rd;
@@ -379,9 +379,9 @@ class I6_OpRdLiI32<bits<8> opcode, dag outs, dag ins, string asmstr,
 class I6_OpLdRdLiSzD16I16<bits<6> opcode, RXSize size, dag outs, dag ins,
                           string asmstr, list<dag> pattern>
     : RXInst6<outs, ins, asmstr, pattern> {
-  field bits<4> rd;
-  field bits<16> dsp;
-  field bits<16> imm;
+  bits<4> rd;
+  bits<16> dsp;
+  bits<16> imm;
 
   let Inst{47-42} = opcode;
   let Inst{41-40} = LD_INDDSP16.Value;
@@ -395,8 +395,8 @@ class I6_OpLdRdLiSzD16I16<bits<6> opcode, RXSize size, dag outs, dag ins,
 class I6_OpLiRsI32<bits<6> opcode, dag outs, dag ins, string asmstr,
                    list<dag> pattern>
     : RXInst6<outs, ins, asmstr, pattern> {
-  field bits<4> rs;
-  field bits<32> imm;
+  bits<4> rs;
+  bits<32> imm;
 
   let Inst{47-42} = opcode;
   let Inst{41-40} = LI_IMM32.Value;
@@ -415,8 +415,8 @@ class RXInst7<dag outs, dag ins, string asmstr, list<dag> pattern>
 class I7_OpLiRdI32<bits<12> opcode, dag outs, dag ins, string asmstr,
                    list<dag> pattern>
     : RXInst7<outs, ins, asmstr, pattern> {
-  field bits<4> rd;
-  field bits<32> imm;
+  bits<4> rd;
+  bits<32> imm;
 
   let Inst{55-44} = opcode;
   let Inst{43-42} = LI_IMM32.Value;
@@ -435,9 +435,9 @@ class RXInst8<dag outs, dag ins, string asmstr, list<dag> pattern>
 class I8_OpLdRdLiSzD16I32<bits<6> opcode, RXSize size, dag outs, dag ins,
                           string asmstr, list<dag> pattern>
     : RXInst8<outs, ins, asmstr, pattern> {
-  field bits<4> rd;
-  field bits<16> dsp;
-  field bits<32> imm;
+  bits<4> rd;
+  bits<16> dsp;
+  bits<32> imm;
 
   let Inst{63-58} = opcode;
   let Inst{57-56} = LD_INDDSP16.Value;

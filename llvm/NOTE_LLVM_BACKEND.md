@@ -205,6 +205,17 @@
         * `MCTargetDesc/*AsmBackend.*`、`MCTargetDesc/*MCCodeEmitter.*`
         * `MCTargetDesc/*MCELFObjectWriter.*`
 
+### tdファイル
+* `class`定義時に`field`を付けるとオペランドのコード生成では使用されない
+    * `CodeEmitterGen::getInstructionCaseForEncoding()`
+        * `if (RV.getPrefix() || RV.getValue()->isComplete())` (真になると`continue`)
+            *`RV.getPrefix()`は`field`などが付いた宣言の場合に真となる -> 以降の処理で無視される
+    * 以下の関数も参考
+        * `TGParser::ParseDeclaration()`
+        * `llvm/utils/TableGen/TGLexer.h getCode()`
+        * `TGLexer::LexToken()`
+        * `TGLexer::LexIdentifier()`
+
 
 ## 参考
 * 公式のバックエンドのソースコード `$LLVM_ROOT/llvm/lib/Target/*`
