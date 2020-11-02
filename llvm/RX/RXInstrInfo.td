@@ -63,14 +63,22 @@ def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
 // asmの記述では4の倍数のみ受け付ける
 // Operandとノードを同じ名前として定義している
 def dsp16 : Operand<i32>,
-            ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]>;
+            ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]> {
+  let EncoderMethod = "getDsp16OpValue";
+}
 
 // 5bit unsigned即値
 def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
 // 8bit signed即値
 def imm8 : Operand<i32>, ImmLeaf<i32, [{return isInt<8>(Imm);}]>;
 // 16bit signed即値
-def imm16 : Operand<i32>, ImmLeaf<i32, [{return isInt<16>(Imm);}]>;
+def imm16 : Operand<i32>, ImmLeaf<i32, [{return isInt<16>(Imm);}]> {
+  let EncoderMethod = "getImm16OpValue";
+}
+// 32bit 即値
+def imm32 : Operand<i32>, ImmLeaf<i32, [{return isInt<32>(Imm);}]> {
+  let EncoderMethod = "getImm32OpValue";
+}
 
 // reg or imm
 def GPRIMM : Operand<i32>;
@@ -116,9 +124,9 @@ let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def RTS : I1_Op<0b00000010, (outs), (ins), "rts", [(RXRts)]>;
 
 // 加算 imm32 reg reg
-def ADD_I32RR : I6_OpLiRsRdI32<0b011100, (outs GPR:$rd), (ins GPR:$rs, i32imm:$imm),
+def ADD_I32RR : I6_OpLiRsRdI32<0b011100, (outs GPR:$rd), (ins GPR:$rs, imm32:$imm),
                                "add #$imm, $rs, $rd",
-                               [(set GPR:$rd, (add GPR:$rs, imm:$imm))]>;
+                               [(set GPR:$rd, (add GPR:$rs, imm32:$imm))]>;
 
 // 加算 reg reg reg
 def ADD_RRR : I3_OpRdRsRs<0b111111110010, (outs GPR:$rd),
@@ -151,9 +159,9 @@ def MUL_RRR : I3_OpRdRsRs<0b111111110011, (outs GPR:$rd),
 let Constraints = "$rd = $src" in
 def EMUL_I32R : I7_OpLiRdI32<0b111111010111,
                              (outs GPR64_lo:$rd, GPR64_hi:$rd2),
-                             (ins GPR64_lo:$src, i32imm:$imm),
+                             (ins GPR64_lo:$src, imm32:$imm),
                              "emul #$imm, $rd ; $rd2",
-                             [(set GPR64_lo:$rd, GPR64_hi:$rd2, (smullohi GPR64_lo:$src, imm:$imm))]>;
+                             [(set GPR64_lo:$rd, GPR64_hi:$rd2, (smullohi GPR64_lo:$src, imm32:$imm))]>;
 
 // 符号付き除算 reg reg
 let Constraints = "$rd = $src" in
@@ -259,9 +267,9 @@ def ROTR_RR : I3_OpRsRd<0b1111110101100100, (outs GPR:$rd),
 }
 
 // move imm32 reg
-def MOV_I32R : I6_OpRdLiI32<0b11111011, (outs GPR:$rd), (ins i32imm:$imm),
+def MOV_I32R : I6_OpRdLiI32<0b11111011, (outs GPR:$rd), (ins imm32:$imm),
                             "mov #$imm, $rd",
-                            [(set GPR:$rd, imm:$imm)]>;
+                            [(set GPR:$rd, imm32:$imm)]>;
 
 // move reg reg (long)
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
@@ -335,9 +343,9 @@ def MOVW_I16D16 : I6_OpLdRdLiSzD16I16<0b111110, SIZE_W, (outs),
 
 // displacement store imm32
 def MOVL_I32D16 : I8_OpLdRdLiSzD16I32<0b111110, SIZE_L, (outs),
-                                      (ins i32imm:$imm, GPR:$rd, dsp16:$dsp),
+                                      (ins imm32:$imm, GPR:$rd, dsp16:$dsp),
                                       "mov.l #$imm, $dsp[$rd]",
-                                      [(store (i32 imm:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+                                      [(store (i32 imm32:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
 
 // displacement load unsigned (byte)
 def MOVUB_D16R : I4_OpSLdRsRdD16<0b01011, SIZE1_B, (outs GPR:$rd),
@@ -371,10 +379,10 @@ def CMP_RR : I2_OpLdRsRs<0b010001, LD_DIRECT,
                          "cmp $rs, $rs2", []>;
 
 // NOTE CMP_I32Rとは命令長が違うだけなので、asm出力しかしないなら差はない
-def CMP_UI4R : I2_OpUi4Rs<0b01100001, (outs), (ins i32imm:$imm, GPR:$rs),
+def CMP_UI4R : I2_OpUi4Rs<0b01100001, (outs), (ins imm32:$imm, GPR:$rs),
                           "cmp #$imm, $rs", []>;
 
-def CMP_I32R : I6_OpLiRsI32<0b011101, (outs), (ins i32imm:$imm, GPR:$rs),
+def CMP_I32R : I6_OpLiRsI32<0b011101, (outs), (ins imm32:$imm, GPR:$rs),
                             "cmp #$imm, $rs", []>;
 }
 
@@ -458,10 +466,10 @@ def BRA : I2_OpRs<0b011111110100, (outs), (ins pcdsp24:$rs),
 let usesCustomInserter = 1 in
 class SelectCC_rrirr<RegisterClass valty, RegisterClass cmpty>
     : RXInstPseudo<(outs valty:$dst),
-                   (ins cmpty:$lhs, cmpty:$rhs, i32imm:$imm,
+                   (ins cmpty:$lhs, cmpty:$rhs, imm32:$imm,
                     valty:$truev, valty:$falsev), "",
                    [(set valty:$dst, (RXSelectCC cmpty:$lhs, cmpty:$rhs,
-                    (i32 imm:$imm), valty:$truev, valty:$falsev))]>;
+                    (i32 imm32:$imm), valty:$truev, valty:$falsev))]>;
 
 def Select_GPR_Using_CC_GPR : SelectCC_rrirr<GPR, GPR>;
 

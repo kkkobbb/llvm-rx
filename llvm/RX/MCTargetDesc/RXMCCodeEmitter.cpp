@@ -62,11 +62,15 @@ public:
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
 
-  /*
-  unsigned getImmOpValue(const MCInst &MI, unsigned OpNo,
-                         SmallVectorImpl<MCFixup> &Fixups,
-                         const MCSubtargetInfo &STI) const;
-                         */
+  unsigned getDsp16OpValue(const MCInst &MI, unsigned OpNo,
+                           SmallVectorImpl<MCFixup> &Fixups,
+                           const MCSubtargetInfo &STI) const;
+  unsigned getImm16OpValue(const MCInst &MI, unsigned OpNo,
+                           SmallVectorImpl<MCFixup> &Fixups,
+                           const MCSubtargetInfo &STI) const;
+  unsigned getImm32OpValue(const MCInst &MI, unsigned OpNo,
+                           SmallVectorImpl<MCFixup> &Fixups,
+                           const MCSubtargetInfo &STI) const;
 };
 } // end anonymous namespace
 
@@ -82,7 +86,6 @@ static void emitInstruction(uint64_t Val, unsigned Size,
   for (int64_t i = Size - 1; i >= 0; --i) {
     uint8_t Byte = (Val >> (i * 8)) & 0xFF;
     support::endian::write<uint8_t>(OS, Byte, support::little);
-    // TODO llvm/include/llvm/Support/EndianStream.h の ArrayRef版writeが使える?
   }
 }
 
@@ -113,6 +116,57 @@ RXMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
 
   llvm_unreachable("Unhandled expression!");
   return 0;
+}
+
+template<unsigned ByteSize>
+static unsigned convLittleEndian(const unsigned Value) {
+  unsigned LEValue = 0;
+  for (unsigned i = 0; i < ByteSize; ++i) {
+    const unsigned pos = i * 8;
+    const unsigned lpos = (ByteSize - 1 - i) * 8;
+    LEValue |= ((Value & (0xff << pos)) >> pos) << lpos;
+  }
+
+  return LEValue;
+}
+
+unsigned
+RXMCCodeEmitter::getDsp16OpValue(const MCInst &MI, unsigned OpNo,
+                                 SmallVectorImpl<MCFixup> &Fixups,
+                                 const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  assert(MO.isImm() &&
+         "getDsp16OpValue expects only immediates");
+
+  const unsigned Dsp = MO.getImm() >> 2;
+  return convLittleEndian<2>(Dsp);
+}
+
+unsigned
+RXMCCodeEmitter::getImm16OpValue(const MCInst &MI, unsigned OpNo,
+                                 SmallVectorImpl<MCFixup> &Fixups,
+                                 const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  assert(MO.isImm() &&
+         "getImm16OpValue expects only immediates");
+
+  const unsigned Imm = MO.getImm();
+  return convLittleEndian<2>(Imm);
+}
+
+unsigned
+RXMCCodeEmitter::getImm32OpValue(const MCInst &MI, unsigned OpNo,
+                                 SmallVectorImpl<MCFixup> &Fixups,
+                                 const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  assert(MO.isImm() &&
+         "getImm32OpValue expects only immediates");
+
+  const unsigned Imm = MO.getImm();
+  return convLittleEndian<4>(Imm);
 }
 
 #include "RXGenMCCodeEmitter.inc"
