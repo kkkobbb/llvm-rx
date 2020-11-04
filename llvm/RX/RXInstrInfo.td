@@ -58,14 +58,22 @@ def pcdsp24 : Operand<OtherVT>;
 def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
 
 // displacement 16
-// dsp16の値の範囲は0-262140(18bit)だが、命令コードのビット表現では1/4して
+// dsp16l(.L)の値の範囲は0-262140(18bit)だが、命令コードのビット表現では1/4して
 // 2bit落とした16bitになる
 // asmの記述では4の倍数のみ受け付ける
+// dps16w(.W)の場合は0-121070(17bit)だが、1/2して1bit落とした値が命令コードになる
 // Operandとノードを同じ名前として定義している
-def dsp16 : Operand<i32>,
-            ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]> {
-  let EncoderMethod = "getDsp16OpValue";
+def dsp16b : Operand<i32>,
+             ImmLeaf<i32,[{return isUInt<16>(Imm);}]>;
+def dsp16w : Operand<i32>,
+             ImmLeaf<i32,[{return isUInt<17>(Imm) && (Imm % 2 == 0);}]> {
+  let EncoderMethod = "getDsp16wOpValue";
 }
+def dsp16l : Operand<i32>,
+             ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]> {
+  let EncoderMethod = "getDsp16lOpValue";
+}
+
 
 // 5bit unsigned即値
 def uimm5 : Operand<i32>, ImmLeaf<i32, [{return isUInt<5>(Imm);}]>;
@@ -292,72 +300,72 @@ def MOVL_RpR : I2_OpSzLdLdRdRs<SIZE_L, LD_INDIRECT, LD_DIRECT,
 // NOTE *extload* 上位ビット拡張ロード
 // displacement load (byte)
 def MOVB_D16R : I4_OpSzLdRsRdD16<SIZE_B, (outs GPR:$rd),
-                                 (ins GPR:$rs, dsp16:$dsp),
+                                 (ins GPR:$rs, dsp16b:$dsp),
                                  "mov.b $dsp[$rs], $rd",
-                                 [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
-def : Pat<(extloadi8 (addr GPR:$rs, dsp16:$dsp)), (MOVB_D16R GPR:$rs, dsp16:$dsp)>;
+                                 [(set GPR:$rd, (sextloadi8 (addr GPR:$rs, dsp16b:$dsp)))]>;
+def : Pat<(extloadi8 (addr GPR:$rs, dsp16b:$dsp)), (MOVB_D16R GPR:$rs, dsp16b:$dsp)>;
 
 // displacement load (word)
 def MOVW_D16R : I4_OpSzLdRsRdD16<SIZE_W, (outs GPR:$rd),
-                                 (ins GPR:$rs, dsp16:$dsp),
+                                 (ins GPR:$rs, dsp16w:$dsp),
                                  "mov.w $dsp[$rs], $rd",
-                                 [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
-def : Pat<(extloadi16 (addr GPR:$rs, dsp16:$dsp)), (MOVW_D16R GPR:$rs, dsp16:$dsp)>;
+                                 [(set GPR:$rd, (sextloadi16 (addr GPR:$rs, dsp16w:$dsp)))]>;
+def : Pat<(extloadi16 (addr GPR:$rs, dsp16w:$dsp)), (MOVW_D16R GPR:$rs, dsp16w:$dsp)>;
 
 // displacement load (long)
 def MOVL_D16R : I4_OpSzLdRsRdD16<SIZE_L, (outs GPR:$rd),
-                                 (ins GPR:$rs, dsp16:$dsp),
+                                 (ins GPR:$rs, dsp16l:$dsp),
                                  "mov.l $dsp[$rs], $rd",
-                                 [(set GPR:$rd, (load (addr GPR:$rs, dsp16:$dsp)))]>;
+                                 [(set GPR:$rd, (load (addr GPR:$rs, dsp16l:$dsp)))]>;
 
 // NOTE truncstore* 上位ビット切り捨てストア
 // displacement store (byte)
 def MOVB_RD16 : I4_OpSzLdRdRsD16<SIZE_B, (outs),
-                                 (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                 (ins GPR:$rs, GPR:$rd, dsp16b:$dsp),
                                  "mov.b $rs, $dsp[$rd]",
-                                 [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+                                 [(truncstorei8 GPR:$rs, (addr GPR:$rd, dsp16b:$dsp))]>;
 
 // displacement store (word)
 def MOVW_RD16 : I4_OpSzLdRdRsD16<SIZE_W, (outs),
-                                 (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                 (ins GPR:$rs, GPR:$rd, dsp16b:$dsp),
                                  "mov.w $rs, $dsp[$rd]",
-                                 [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+                                 [(truncstorei16 GPR:$rs, (addr GPR:$rd, dsp16b:$dsp))]>;
 
 // displacement store (long)
 def MOVL_RD16 : I4_OpSzLdRdRsD16<SIZE_L, (outs),
-                                 (ins GPR:$rs, GPR:$rd, dsp16:$dsp),
+                                 (ins GPR:$rs, GPR:$rd, dsp16l:$dsp),
                                  "mov.l $rs, $dsp[$rd]",
-                                 [(store GPR:$rs, (addr GPR:$rd, dsp16:$dsp))]>;
+                                 [(store GPR:$rs, (addr GPR:$rd, dsp16l:$dsp))]>;
 
 // displacement store imm8
 def MOVB_I8D16 : I5_OpLdRdLiSzD16I8<0b111110, SIZE_B, (outs),
-                                    (ins imm8:$imm, GPR:$rd, dsp16:$dsp),
+                                    (ins imm8:$imm, GPR:$rd, dsp16b:$dsp),
                                     "mov.b #${imm}:8, $dsp[$rd]",
-                                    [(truncstorei8 (i32 imm8:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+                                    [(truncstorei8 (i32 imm8:$imm), (addr GPR:$rd, dsp16b:$dsp))]>;
 
 // displacement store imm16
 def MOVW_I16D16 : I6_OpLdRdLiSzD16I16<0b111110, SIZE_W, (outs),
-                                      (ins imm16:$imm, GPR:$rd, dsp16:$dsp),
+                                      (ins imm16:$imm, GPR:$rd, dsp16w:$dsp),
                                       "mov.w #${imm}:16, $dsp[$rd]",
-                                      [(truncstorei16 (i32 imm16:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+                                      [(truncstorei16 (i32 imm16:$imm), (addr GPR:$rd, dsp16w:$dsp))]>;
 
 // displacement store imm32
 def MOVL_I32D16 : I8_OpLdRdLiSzD16I32<0b111110, SIZE_L, (outs),
-                                      (ins imm32:$imm, GPR:$rd, dsp16:$dsp),
+                                      (ins imm32:$imm, GPR:$rd, dsp16l:$dsp),
                                       "mov.l #$imm, $dsp[$rd]",
-                                      [(store (i32 imm32:$imm), (addr GPR:$rd, dsp16:$dsp))]>;
+                                      [(store (i32 imm32:$imm), (addr GPR:$rd, dsp16l:$dsp))]>;
 
 // displacement load unsigned (byte)
 def MOVUB_D16R : I4_OpSLdRsRdD16<0b01011, SIZE1_B, (outs GPR:$rd),
-                                 (ins GPR:$rs, dsp16:$dsp),
+                                 (ins GPR:$rs, dsp16b:$dsp),
                                  "movu.b $dsp[$rs], $rd",
-                                 [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16:$dsp)))]>;
+                                 [(set GPR:$rd, (zextloadi8 (addr GPR:$rs, dsp16b:$dsp)))]>;
 
 // displacement load unsigned (word)
 def MOVUW_D16R : I4_OpSLdRsRdD16<0b01011, SIZE1_W, (outs GPR:$rd),
-                                 (ins GPR:$rs, dsp16:$dsp),
+                                 (ins GPR:$rs, dsp16w:$dsp),
                                  "movu.w $dsp[$rs], $rd",
-                                 [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16:$dsp)))]>;
+                                 [(set GPR:$rd, (zextloadi16 (addr GPR:$rs, dsp16w:$dsp)))]>;
 
 let Defs = [R0], Uses = [R0] in {
 // NOTE 未使用

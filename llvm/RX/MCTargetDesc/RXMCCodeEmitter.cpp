@@ -62,9 +62,12 @@ public:
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
 
-  unsigned getDsp16OpValue(const MCInst &MI, unsigned OpNo,
-                           SmallVectorImpl<MCFixup> &Fixups,
-                           const MCSubtargetInfo &STI) const;
+  unsigned getDsp16wOpValue(const MCInst &MI, unsigned OpNo,
+                            SmallVectorImpl<MCFixup> &Fixups,
+                            const MCSubtargetInfo &STI) const;
+  unsigned getDsp16lOpValue(const MCInst &MI, unsigned OpNo,
+                            SmallVectorImpl<MCFixup> &Fixups,
+                            const MCSubtargetInfo &STI) const;
   unsigned getImm16OpValue(const MCInst &MI, unsigned OpNo,
                            SmallVectorImpl<MCFixup> &Fixups,
                            const MCSubtargetInfo &STI) const;
@@ -131,13 +134,26 @@ static unsigned convLittleEndian(const unsigned Value) {
 }
 
 unsigned
-RXMCCodeEmitter::getDsp16OpValue(const MCInst &MI, unsigned OpNo,
+RXMCCodeEmitter::getDsp16wOpValue(const MCInst &MI, unsigned OpNo,
                                  SmallVectorImpl<MCFixup> &Fixups,
                                  const MCSubtargetInfo &STI) const {
   const MCOperand &MO = MI.getOperand(OpNo);
 
   assert(MO.isImm() &&
-         "getDsp16OpValue expects only immediates");
+         "getDsp16wOpValue expects only immediates");
+
+  const unsigned Dsp = MO.getImm() >> 1;
+  return convLittleEndian<2>(Dsp);
+}
+
+unsigned
+RXMCCodeEmitter::getDsp16lOpValue(const MCInst &MI, unsigned OpNo,
+                                 SmallVectorImpl<MCFixup> &Fixups,
+                                 const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  assert(MO.isImm() &&
+         "getDsp16lOpValue expects only immediates");
 
   const unsigned Dsp = MO.getImm() >> 2;
   return convLittleEndian<2>(Dsp);
