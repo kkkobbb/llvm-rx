@@ -66,11 +66,11 @@ def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], [SDNPWantRoot]>;
 def dsp16b : Operand<i32>,
              ImmLeaf<i32,[{return isUInt<16>(Imm);}]>;
 def dsp16w : Operand<i32>,
-             ImmLeaf<i32,[{return isUInt<17>(Imm) && (Imm % 2 == 0);}]> {
+             ImmLeaf<i32,[{return isShiftedUInt<16, 1>(Imm);}]> {
   let EncoderMethod = "getDsp16wOpValue";
 }
 def dsp16l : Operand<i32>,
-             ImmLeaf<i32,[{return isUInt<18>(Imm) && (Imm % 4 == 0);}]> {
+             ImmLeaf<i32,[{return isShiftedUInt<16, 2>(Imm);}]> {
   let EncoderMethod = "getDsp16lOpValue";
 }
 
