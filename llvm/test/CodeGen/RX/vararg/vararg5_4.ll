@@ -2,7 +2,7 @@
 
 define i32 @varargsum(i32 %a, i32 %b, i32 %c, i32 %d, i32 %base, ...) noinline nounwind optnone {
 ; CHECK-LABEL: varargsum:
-; CHECK:       ; %bb.0:
+; CHECK:       ; %bb.0: ; %entry
 ; CHECK-NEXT:    add #-40, r0, r0
 ; CHECK-NEXT:    mov.l 44[r0], r5
 ; CHECK-NEXT:    mov.l r1, 36[r0]
@@ -134,7 +134,7 @@ declare void @llvm.va_end(i8*) nounwind
 
 define i32 @call_vararg() noinline nounwind optnone {
 ; CHECK-LABEL: call_vararg:
-; CHECK:       ; %bb.0:
+; CHECK:       ; %bb.0: ; %entry
 ; CHECK-NEXT:    add #-32, r0, r0
 ; CHECK-NEXT:    mov.l #0, 28[r0]
 ; CHECK-NEXT:    add #16, r0, r1
