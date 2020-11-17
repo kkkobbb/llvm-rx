@@ -92,6 +92,12 @@ RXTargetLowering::RXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::SELECT, MVT::i32, Custom);
   setOperationAction(ISD::SELECT_CC, MVT::i32, Expand);
 
+  // 可変長引数の対応
+  setOperationAction(ISD::VASTART, MVT::Other, Custom);
+  setOperationAction(ISD::VAARG, MVT::Other, Expand);
+  setOperationAction(ISD::VACOPY, MVT::Other, Expand);
+  setOperationAction(ISD::VAEND, MVT::Other, Expand);
+
   // NOTE llvm/include/llvm/CodeGen/TargetLowering.h setMaxAtomicSizeInBitsSupported
   // NOTE バックエンドがサポートする最大のアトミック操作のサイズ
   // これより大きい場合、__atomic_*ライブラリに展開される
@@ -115,6 +121,8 @@ SDValue RXTargetLowering::LowerOperation(SDValue Op,
     return lowerGlobalAddress(Op, DAG);
   case ISD::SELECT:
     return lowerSELECT(Op, DAG);
+  case ISD::VASTART:
+    return lowerVASTART(Op, DAG);
   }
 }
 
@@ -225,6 +233,22 @@ SDValue RXTargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
   SDValue Ops[] = {CondV, Zero, SetNE, TrueV, FalseV};
 
   return DAG.getNode(RXISD::SELECT_CC, DL, VTs, Ops);
+}
+
+SDValue RXTargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) const {
+  // TODO ほぼRISCV
+  MachineFunction &MF = DAG.getMachineFunction();
+  RXMachineFunctionInfo *FuncInfo = MF.getInfo<RXMachineFunctionInfo>();
+
+  SDLoc DL(Op);
+  SDValue FI = DAG.getFrameIndex(FuncInfo->getVarArgsFrameIndex(),
+                                 getPointerTy(MF.getDataLayout()));
+
+  // vastart just stores the address of the VarArgsFrameIndex slot into the
+  // memory location argument.
+  const Value *SV = cast<SrcValueSDNode>(Op.getOperand(2))->getValue();
+  return DAG.getStore(Op.getOperand(0), DL, FI, Op.getOperand(1),
+                      MachinePointerInfo(SV));
 }
 
 static bool isSelectPseudo(MachineInstr &MI) {
@@ -372,6 +396,10 @@ RXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   }
 }
 
+static const MCPhysReg ArgGPRs[] = {
+  RX::R1, RX::R2, RX::R3, RX::R4
+};
+
 // NOTE llvm/include/llvm/CodeGen/TargetLowering.h LowerFormalArguments
 // Transform physical registers into virtual registers.
 SDValue RXTargetLowering::LowerFormalArguments(
@@ -447,9 +475,66 @@ SDValue RXTargetLowering::LowerFormalArguments(
     }
   }
 
+  // Used with vargs to acumulate store chains.
+  std::vector<SDValue> OutChains;
+
   if (IsVarArg) {
-      report_fatal_error(
-        "VarArg not supported!");
+    // 可変引数の処理
+    // TODO ほぼRISCV
+    const unsigned Bytes = 4;
+    ArrayRef<MCPhysReg> ArgRegs = makeArrayRef(ArgGPRs);
+    unsigned Idx = CCInfo.getFirstUnallocated(ArgRegs);
+    const TargetRegisterClass *RC = &RX::GPRRegClass;
+    MachineFrameInfo &MFI = MF.getFrameInfo();
+    MachineRegisterInfo &RegInfo = MF.getRegInfo();
+    RXMachineFunctionInfo *RXFI = MF.getInfo<RXMachineFunctionInfo>();
+
+    // Offset of the first variable argument from stack pointer, and size of
+    // the vararg save area. For now, the varargs save area is either zero or
+    // large enough to hold r1-r4.
+    int VaArgOffset;
+
+    // If all registers are allocated, then all varargs must be passed on the
+    // stack and we don't need to save any argregs.
+    if (ArgRegs.size() == Idx) {
+      LLVM_DEBUG(dbgs() << "### LowerFormalArguments Vararg ArgRegs.size() == Idx (Idx = " << Idx << ")\n");
+      VaArgOffset = CCInfo.getNextStackOffset();
+    } else {
+      LLVM_DEBUG(dbgs() << "### LowerFormalArguments Vararg ArgRegs.size() != Idx (Idx = " << Idx << ")\n");
+      VaArgOffset = -(Bytes * (ArgRegs.size() - Idx));
+    }
+
+    // 関数呼び出し時にスタックに戻り先アドレス(4byte)をpushするため、+4している
+    VaArgOffset += 4;
+
+    // Record the frame index of the first variable argument
+    // which is a value necessary to VASTART.
+    int FI = MFI.CreateFixedObject(Bytes, VaArgOffset, true);
+    RXFI->setVarArgsFrameIndex(FI);
+
+    // Copy the integer registers that may have been used for passing varargs
+    // to the vararg save area.
+    for (unsigned I = Idx; I < ArgRegs.size();
+         ++I, VaArgOffset += Bytes) {
+      const Register Reg = RegInfo.createVirtualRegister(RC);
+      RegInfo.addLiveIn(ArgRegs[I], Reg);
+      SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, MVT::i32);
+      FI = MFI.CreateFixedObject(Bytes, VaArgOffset, true);
+      SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+      SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
+                                   MachinePointerInfo::getFixedStack(MF, FI));
+      cast<StoreSDNode>(Store.getNode())
+          ->getMemOperand()
+          ->setValue((Value *)nullptr);
+      OutChains.push_back(Store);
+    }
+  }
+
+  // All stores are grouped in one node to allow the matching between
+  // the size of Ins and InVals. This only happens for vararg functions.
+  if (!OutChains.empty()) {
+    OutChains.push_back(Chain);
+    Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
   }
 
   return Chain;

@@ -19,8 +19,14 @@
 namespace llvm {
 
 class RXMachineFunctionInfo : public MachineFunctionInfo {
+  /// FrameIndex for start of varargs area
+  int VarArgsFrameIndex = 0;
+
 public:
   RXMachineFunctionInfo(MachineFunction &MF) {}
+
+  int getVarArgsFrameIndex() const { return VarArgsFrameIndex; }
+  void setVarArgsFrameIndex(int Index) { VarArgsFrameIndex = Index; }
 };
 
 } // end namespace llvm

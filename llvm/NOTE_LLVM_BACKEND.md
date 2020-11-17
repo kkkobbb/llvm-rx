@@ -241,6 +241,10 @@
         * `MCTargetDesc/*AsmBackend.*`、`MCTargetDesc/*MCCodeEmitter.*`
         * `MCTargetDesc/*MCELFObjectWriter.*`
 
+### 可変長引数
+* `ISD::VASTART`, `ISD::VAARG`, `ISD::VACOPY`, `ISD::VAEND`ノードを処理できるようにする
+    * `ISD::VASTART`は`Custom`だが、それ以外はターゲット毎に色々
+
 
 ## 参考
 * 公式のバックエンドのソースコード `$LLVM_ROOT/llvm/lib/Target/*`
