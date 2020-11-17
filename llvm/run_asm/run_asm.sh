@@ -15,6 +15,8 @@ usage() {
     echo "  -r N=V    initialize register N (0 <= N <= 15) (V 32bit)"
     echo "  -c FUNC   call FUNC"
     echo "  -b ASM    add ASM before call"
+    echo "  -B        break function"
+    # -Bオプションは標準入力を受け取ったときは動作しない
 }
 
 parse_opt_reg() {
@@ -41,8 +43,11 @@ SRC_STDIN=false
 REG_VAL=""
 CALL_FUNC=""
 ADD_ASM=""
+EX_PAGENG="set pagination off"
+EX_BREAK=""
+EX_QUIT="q"
 
-while getopts "sr:c:b:h" OPT
+while getopts "sr:c:b:Bh" OPT
 do
     case $OPT in
         s) SRC_STDIN=true ;;
@@ -56,6 +61,10 @@ do
            ;;
         c) CALL_FUNC=$OPTARG ;;
         b) ADD_ASM="$ADD_ASM\t$OPTARG\n" ;;
+        B) EX_BREAK="b before_call"
+           EX_PAGENG=""
+           EX_QUIT=""
+           ;;
         h) usage
            exit 0
            ;;
@@ -108,7 +117,6 @@ else
     cat $START_CALL > $START_
 fi
 
-
 # build
 $RXAS $START_ -o $tmpdir/start.o
 if $SRC_STDIN; then
@@ -120,10 +128,11 @@ $RXLD $tmpdir/start.o $tmpdir/$OBJ -o $tmpdir/$ELF
 
 # simulator
 $RXGDB -q $tmpdir/$ELF \
-       -ex "set pagination off" \
+       -ex "$EX_PAGENG" \
        -ex "set confirm off" \
        -ex "target sim" \
        -ex "load" \
+       -ex "$EX_BREAK" \
        -ex "run" \
        -ex "i r" \
-       -ex "q"
+       -ex "$EX_QUIT"
