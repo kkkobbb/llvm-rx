@@ -387,7 +387,7 @@ static MachineBasicBlock *emitSelectPseudo(MachineInstr &MI,
 
 MachineBasicBlock *
 RXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
-                                                 MachineBasicBlock *BB) const {
+                                              MachineBasicBlock *BB) const {
   switch (MI.getOpcode()) {
   default:
     llvm_unreachable("Unexpected instr type to insert");

@@ -135,8 +135,8 @@ static unsigned convLittleEndian(const unsigned Value) {
 
 unsigned
 RXMCCodeEmitter::getDsp16wOpValue(const MCInst &MI, unsigned OpNo,
-                                 SmallVectorImpl<MCFixup> &Fixups,
-                                 const MCSubtargetInfo &STI) const {
+                                  SmallVectorImpl<MCFixup> &Fixups,
+                                  const MCSubtargetInfo &STI) const {
   const MCOperand &MO = MI.getOperand(OpNo);
 
   assert(MO.isImm() &&
@@ -148,8 +148,8 @@ RXMCCodeEmitter::getDsp16wOpValue(const MCInst &MI, unsigned OpNo,
 
 unsigned
 RXMCCodeEmitter::getDsp16lOpValue(const MCInst &MI, unsigned OpNo,
-                                 SmallVectorImpl<MCFixup> &Fixups,
-                                 const MCSubtargetInfo &STI) const {
+                                  SmallVectorImpl<MCFixup> &Fixups,
+                                  const MCSubtargetInfo &STI) const {
   const MCOperand &MO = MI.getOperand(OpNo);
 
   assert(MO.isImm() &&

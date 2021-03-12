@@ -76,8 +76,8 @@ bool RXExpandPseudo::expandMBB(MachineBasicBlock &MBB) {
 }
 
 bool RXExpandPseudo::expandMI(MachineBasicBlock &MBB,
-                                 MachineBasicBlock::iterator MBBI,
-                                 MachineBasicBlock::iterator &NextMBBI) {
+                              MachineBasicBlock::iterator MBBI,
+                              MachineBasicBlock::iterator &NextMBBI) {
   switch (MBBI->getOpcode()) {
   case RX::pBRCOND_EQ:
     return expandBrcond(MBB, MBBI, RX::BEQ, NextMBBI);

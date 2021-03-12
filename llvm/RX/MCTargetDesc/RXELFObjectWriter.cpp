@@ -35,9 +35,9 @@ RXELFObjectWriter::RXELFObjectWriter(uint8_t OSABI, bool Is64Bit)
 RXELFObjectWriter::~RXELFObjectWriter() {}
 
 unsigned RXELFObjectWriter::getRelocType(MCContext &Ctx,
-                                            const MCValue &Target,
-                                            const MCFixup &Fixup,
-                                            bool IsPCRel) const {
+                                         const MCValue &Target,
+                                         const MCFixup &Fixup,
+                                         bool IsPCRel) const {
   Ctx.reportError(Fixup.getLoc(), "Unsupported relocation type");
   return 0;
 }

@@ -232,7 +232,7 @@ bool RXInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
 // 削除後の命令数を返す
 // BytesRemovedがnullでない場合、変更したバイト数をセットする
 unsigned RXInstrInfo::removeBranch(MachineBasicBlock &MBB,
-                                      int *BytesRemoved) const {
+                                   int *BytesRemoved) const {
   LLVM_DEBUG(dbgs() << "### removeBranch " << MBB << "\n");
   // 末尾が分岐になる場合は以下の3パターン
   // 1. 条件分岐

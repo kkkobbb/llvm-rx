@@ -28,7 +28,7 @@ void RXAsmBackend::relaxInstruction(MCInst &Inst,
 }
 
 bool RXAsmBackend::mayNeedRelaxation(const MCInst &Inst,
-                                        const MCSubtargetInfo &STI) const {
+                                     const MCSubtargetInfo &STI) const {
   return false;
 }
 
@@ -39,10 +39,10 @@ bool RXAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count) const {
 }
 
 void RXAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
-                                 const MCValue &Target,
-                                 MutableArrayRef<char> Data, uint64_t Value,
-                                 bool IsResolved,
-                                 const MCSubtargetInfo *STI) const {
+                              const MCValue &Target,
+                              MutableArrayRef<char> Data, uint64_t Value,
+                              bool IsResolved,
+                              const MCSubtargetInfo *STI) const {
   return;
 }
 

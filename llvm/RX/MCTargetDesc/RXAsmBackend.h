@@ -28,7 +28,7 @@ class RXAsmBackend : public MCAsmBackend {
 
 public:
   RXAsmBackend(const MCSubtargetInfo &STI, uint8_t OSABI, bool Is64Bit,
-                  const MCTargetOptions &Options)
+               const MCTargetOptions &Options)
       : MCAsmBackend(support::little), STI(STI), OSABI(OSABI), Is64Bit(Is64Bit),
         TargetOptions(Options) {}
   ~RXAsmBackend() override {}
