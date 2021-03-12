@@ -32,8 +32,9 @@ using namespace llvm;
 void RXInstPrinter::printInst(const MCInst *MI, uint64_t Address,
                               StringRef Annot, const MCSubtargetInfo &STI,
                               raw_ostream &O) {
-  if (!printAliasInstr(MI, STI, O))
-    printInstruction(MI, Address, STI, O);
+  const MCInst *NewMI = MI;
+  if (!printAliasInstr(NewMI, Address, STI, O))
+    printInstruction(NewMI, Address, STI, O);
   printAnnotation(O, Annot);
 }
 

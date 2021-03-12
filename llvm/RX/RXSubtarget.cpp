@@ -31,7 +31,7 @@ RXSubtarget::RXSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
     : RXGenSubtargetInfo(TT, CPU, FS),
       FrameLowering(*this),
       InstrInfo(), RegInfo(getHwMode()), TLInfo(TM, *this) {
-  std::string CPUName = CPU;
+  std::string CPUName = std::string(CPU);
   if (CPUName.empty())
     CPUName = "generic";
 

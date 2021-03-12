@@ -47,7 +47,7 @@ void RXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 
 void RXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
                                       MachineBasicBlock::iterator I,
-                                      unsigned SrcReg, bool IsKill, int FI,
+                                      Register SrcReg, bool IsKill, int FI,
                                       const TargetRegisterClass *RC,
                                       const TargetRegisterInfo *TRI) const {
   // スタックへレジスタの値を保存する命令を生成する
@@ -66,7 +66,7 @@ void RXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
 
 void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                        MachineBasicBlock::iterator I,
-                                       unsigned DstReg, int FI,
+                                       Register DstReg, int FI,
                                        const TargetRegisterClass *RC,
                                        const TargetRegisterInfo *TRI) const {
   // スタックからレジスタの値を取得する命令を生成する

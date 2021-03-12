@@ -1,5 +1,5 @@
 ; RUN: llc -mtriple=rxv1 -verify-machineinstrs < %s | FileCheck %s
-; RUN: not llc -mtriple=rxv1 -relocation-model=pic -verify-machineinstrs < %s \
+; RUN: not --crash llc -mtriple=rxv1 -relocation-model=pic -verify-machineinstrs < %s \
 ; RUN: 2>&1 | FileCheck -check-prefix=RXPIC %s
 
 ; RXPIC: LLVM ERROR: Unsupported position independent code

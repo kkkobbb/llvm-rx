@@ -22,9 +22,8 @@
 
 using namespace llvm;
 
-void RXAsmBackend::relaxInstruction(const MCInst &Inst,
-                                       const MCSubtargetInfo &STI,
-                                       MCInst &Res) const {
+void RXAsmBackend::relaxInstruction(MCInst &Inst,
+                                    const MCSubtargetInfo &STI) const {
   llvm_unreachable("Opcode not expected!");
 }
 

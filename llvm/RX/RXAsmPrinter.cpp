@@ -40,11 +40,11 @@ public:
 
   StringRef getPassName() const override { return "RX Assembly Printer"; }
 
-  void EmitInstruction(const MachineInstr *MI) override;
+  void emitInstruction(const MachineInstr *MI) override;
 };
 }
 
-void RXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
+void RXAsmPrinter::emitInstruction(const MachineInstr *MI) {
   LLVM_DEBUG(dbgs() << "### EmitInstruction " << *MI << "\n");
 
   MCInst TmpInst;

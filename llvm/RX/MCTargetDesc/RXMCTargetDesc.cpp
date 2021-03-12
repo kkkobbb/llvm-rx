@@ -59,7 +59,7 @@ static MCAsmInfo *createRXMCAsmInfo(const MCRegisterInfo &MRI,
 
 static MCSubtargetInfo *createRXMCSubtargetInfo(const Triple &TT,
                                                 StringRef CPU, StringRef FS) {
-  std::string CPUName = CPU;
+  std::string CPUName = std::string(CPU);
   if (CPUName.empty())
     CPUName = "generic";
   return createRXMCSubtargetInfoImpl(TT, CPUName, FS);
