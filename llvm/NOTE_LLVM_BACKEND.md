@@ -92,8 +92,10 @@
     * `XXXInstrFormat.td` `XXXInstrInfo.td`に命令を記述
         * 最初は簡単なもの(nop等)のみでもいい
         * `ADJCALLSTACKUP` `ADJCALLSTACKDOWN`はほぼコピペでいい
+        * LLVM IR命令関係は以下のファイル等を参照
+            * `$LLVM_ROOT/llvm/include/llvm/CodeGen/ISDOpcodes.h`
+            * `$LLVM_ROOT/llvm/include/llvm/Target/TargetSelectionDAG.td`
     * `XXX.td`は必要なtdファイルをinclude等
-        * subtargetがある場合、`XXXSubTarget.{cpp,h}`等を記述してからの方がいい
 * マシン情報の記述
     * 以下を記述 (ビルド通すだけなら適当でもいい) (`=0`のメソッドのみ実装等)
         * `XXX.h`
