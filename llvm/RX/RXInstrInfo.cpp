@@ -78,7 +78,10 @@ void RXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
   // displacement mov命令で値をDstRegに保存
   // ただし、RXのdisplacementは18bitの制限有
   BuildMI(MBB, I, DL, get(RX::MOVL_D16R))
-      .addReg(DstReg)
+      // TODO ここでDstRegをDefineにしないと関数呼び出し後のレジスタ復元時にエラーになる
+      //      (llcの-verify-machineinstrsを付けた時のみ)
+      //      RISCV等では付けていないので別の対処法があるかも
+      .addReg(DstReg, RegState::Define)
       .addFrameIndex(FI)
       .addImm(0);
 }
