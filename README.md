@@ -14,7 +14,7 @@
     * llvmソースコードのトップディレクトリを `$LLVM_ROOT` とする
 2. バージョン変更
     * `cd $LLVM_ROOT`
-    * `git checkout -B llvm-rx-11.1.0 llvmorg-11.1.0`
+    * `git checkout -B llvm-rx-13.0.0 llvmorg-13.0.0`
         * バージョンを指定してブランチ作成
 3. ソースコード修正
     * llvm

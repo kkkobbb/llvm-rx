@@ -13,6 +13,8 @@
 
 namespace llvm {
 
+class formatted_raw_ostream;
+
 class RXTargetStreamer : public MCTargetStreamer {
 public:
   RXTargetStreamer(MCStreamer &S);

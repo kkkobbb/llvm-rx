@@ -1,3 +1,5 @@
+add_llvm_component_group(RX)
+
 set(LLVM_TARGET_DEFINITIONS RX.td)
 
 tablegen(LLVM RXGenAsmMatcher.inc -gen-asm-matcher)
@@ -26,6 +28,21 @@ add_llvm_target(RXCodeGen
   RXSubtarget.cpp
   RXTargetMachine.cpp
   RXTargetObjectFile.cpp
+
+  LINK_COMPONENTS
+  Analysis
+  AsmPrinter
+  Core
+  CodeGen
+  MC
+  RXDesc
+  RXInfo
+  SelectionDAG
+  Support
+  Target
+
+  ADD_TO_COMPONENT
+  RX
   )
 
 add_subdirectory(MCTargetDesc)

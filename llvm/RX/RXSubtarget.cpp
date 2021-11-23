@@ -28,12 +28,11 @@ void RXSubtarget::anchor() {}
 
 RXSubtarget::RXSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
                          StringRef ABIName, const TargetMachine &TM)
-    : RXGenSubtargetInfo(TT, CPU, FS),
+    : RXGenSubtargetInfo(TT, CPU, /*TuneCPU*/ CPU, FS),
       FrameLowering(*this),
       InstrInfo(), RegInfo(getHwMode()), TLInfo(TM, *this) {
-  std::string CPUName = std::string(CPU);
-  if (CPUName.empty())
-    CPUName = "generic";
+  if (CPU.empty())
+    CPU = "generic";
 
-  ParseSubtargetFeatures(CPUName, FS);
+  ParseSubtargetFeatures(CPU, /*TuneCPU*/ CPU, FS);
 }

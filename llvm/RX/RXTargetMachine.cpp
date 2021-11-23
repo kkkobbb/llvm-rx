@@ -16,10 +16,6 @@
 #include "TargetInfo/RXTargetInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
-#include "llvm/CodeGen/GlobalISel/IRTranslator.h"
-#include "llvm/CodeGen/GlobalISel/InstructionSelect.h"
-#include "llvm/CodeGen/GlobalISel/Legalizer.h"
-#include "llvm/CodeGen/GlobalISel/RegBankSelect.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
@@ -34,7 +30,6 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRXTarget() {
   RegisterTargetMachine<RXTargetMachine> X(getTheRXv1Target());
 
   PassRegistry *PR = PassRegistry::getPassRegistry();
-  initializeGlobalISel(*PR);
   initializeRXExpandPseudoPass(*PR);
 }
 
