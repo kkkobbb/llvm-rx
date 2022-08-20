@@ -155,7 +155,7 @@ bool RXExpandPseudo::expandBrcond( MachineBasicBlock &MBB,
   MachineInstr &MI = *MBBI;
   DebugLoc DL = MI.getDebugLoc();
 
-  // pBRCOND_*のオペランドは(reg reg)か(imm reg)の2種類
+  // pBRCOND_*のオペランドは(reg reg addr)か(imm reg addr)の2種類
   buildCmp(TII, MBB, MBBI, DL, MI.getOperand(0), MI.getOperand(1));
 
   BuildMI(MBB, MBBI, DL, TII->get(branchOp))
