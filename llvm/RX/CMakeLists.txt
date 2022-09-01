@@ -27,7 +27,6 @@ add_llvm_target(RXCodeGen
   RXRegisterInfo.cpp
   RXSubtarget.cpp
   RXTargetMachine.cpp
-  RXTargetObjectFile.cpp
 
   LINK_COMPONENTS
   Analysis

@@ -12,7 +12,6 @@
 
 #include "RX.h"
 #include "RXTargetMachine.h"
-#include "RXTargetObjectFile.h"
 #include "TargetInfo/RXTargetInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -60,7 +59,7 @@ RXTargetMachine::RXTargetMachine(const Target &T, const Triple &TT,
     : LLVMTargetMachine(T, computeDataLayout(TT), TT, CPU, FS, Options,
                         getEffectiveRelocModel(TT, RM),
                         getEffectiveCodeModel(CM, CodeModel::Small), OL),
-      TLOF(std::make_unique<RXELFTargetObjectFile>()),
+      TLOF(std::make_unique<TargetLoweringObjectFileELF>()),
       Subtarget(TT, CPU, FS, Options.MCOptions.getABIName(), *this) {
   initAsmInfo();
 }
