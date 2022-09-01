@@ -32,7 +32,8 @@ bool RXAsmBackend::mayNeedRelaxation(const MCInst &Inst,
   return false;
 }
 
-bool RXAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count) const {
+bool RXAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
+                                const MCSubtargetInfo *STI) const {
   for (; Count > 0; --Count)
     OS.write("\x03", 1);
   return true;

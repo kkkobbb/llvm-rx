@@ -7,6 +7,6 @@
     * `cmake --build .`
 
 ## 実行
-* `python3 ./bin/llvm-lit test/CodeGen/RX`
+* `./bin/llvm-lit test/CodeGen/RX`
     * cmakeを実行して実行ファイル等が生成されたディレクトリで実行
     * `-vv`を付けるとエラー時に詳細が出力される

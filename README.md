@@ -14,7 +14,7 @@
     * llvmソースコードのトップディレクトリを `$LLVM_ROOT` とする
 2. バージョン変更
     * `cd $LLVM_ROOT`
-    * `git checkout -B llvm-rx-13.0.0 llvmorg-13.0.0`
+    * `git checkout -b llvm-rx-14.0.6 llvmorg-14.0.6`
         * バージョンを指定してブランチ作成
 3. ソースコード修正
     * llvm
@@ -34,6 +34,8 @@ llcのみ対応
 ### ビルド
 * `cd $LLVM_ROOT && mkdir _build_rx && cd _build_rx`
 * `cmake ../llvm -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=RX -DLLVM_TARGETS_TO_BUILD=RX -DLLVM_DEFAULT_TARGET_TRIPLE=rxv1-unknown-unknown`
+    * ninjaを使う場合は`-G Ninja`を追加
+    * ccacheを使う場合は`CC=/usr/lib/ccache/gcc CXX=/usr/lib/ccache/g++`をcmakeの前に追加
 * `cmake --build . --target llc`
 
 ### 使い方

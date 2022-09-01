@@ -22,8 +22,8 @@
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/TargetRegistry.h"
 
 #define GET_INSTRINFO_MC_DESC
 #include "RXGenInstrInfo.inc"
@@ -78,7 +78,7 @@ static MCTargetStreamer *createRXAsmTargetStreamer(MCStreamer &S,
 }
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRXTargetMC() {
-  // NOTE llvm/include/llvm/Support/TargetRegistry.h getTheFooTarget
+  // NOTE llvm/include/llvm/MC/TargetRegistry.h getTheFooTarget
   for (Target *T : {&getTheRXv1Target()}) {
     TargetRegistry::RegisterMCAsmInfo(*T, createRXMCAsmInfo);
     TargetRegistry::RegisterMCInstrInfo(*T, createRXMCInstrInfo);

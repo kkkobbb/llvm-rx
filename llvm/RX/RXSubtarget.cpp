@@ -13,7 +13,7 @@
 #include "RXSubtarget.h"
 #include "RX.h"
 #include "RXTargetMachine.h"
-#include "llvm/Support/TargetRegistry.h"
+#include "llvm/MC/TargetRegistry.h"
 #include <string>
 
 using namespace llvm;
